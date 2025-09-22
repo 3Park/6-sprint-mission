@@ -1,8 +1,11 @@
 package com.sprint.mission.discodeit.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
+import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.service.MessageService;
 import lombok.RequiredArgsConstructor;
@@ -32,9 +35,9 @@ public class MessageController {
       consumes = MediaType.MULTIPART_FORM_DATA_VALUE
   )
   public ResponseEntity<Message> create(
-      @RequestPart("messageCreateRequest") MessageCreateRequest messageCreateRequest,
+      @RequestPart("messageCreateRequest") String req,
       @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments
-  ) {
+  ) throws JsonProcessingException {
     List<BinaryContentCreateRequest> attachmentRequests = Optional.ofNullable(attachments)
         .map(files -> files.stream()
             .map(file -> {
@@ -50,6 +53,9 @@ public class MessageController {
             })
             .toList())
         .orElse(new ArrayList<>());
+
+    MessageCreateRequest messageCreateRequest = new ObjectMapper().readValue(req,
+        MessageCreateRequest.class);
     Message createdMessage = messageService.create(messageCreateRequest, attachmentRequests);
     return ResponseEntity
         .status(HttpStatus.CREATED)
