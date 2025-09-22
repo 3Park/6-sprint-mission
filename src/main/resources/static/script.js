@@ -1,5 +1,5 @@
 // API endpoints
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = '/api';
 const ENDPOINTS = {
     USERS: `${API_BASE_URL}/user/findAll`,
     BINARY_CONTENT: `${API_BASE_URL}/binaryContent/find`
