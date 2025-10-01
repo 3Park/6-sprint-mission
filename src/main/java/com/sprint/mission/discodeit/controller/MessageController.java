@@ -31,9 +31,6 @@ public class MessageController {
   private final MessageService messageService;
 
   @PostMapping
-  @RequestMapping(
-      consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-  )
   public ResponseEntity<Message> create(
       @RequestPart("messageCreateRequest") String req,
       @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments
