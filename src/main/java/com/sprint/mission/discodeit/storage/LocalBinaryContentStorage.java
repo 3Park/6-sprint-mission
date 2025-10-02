@@ -14,11 +14,22 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 
+@Component
+@ConditionalOnProperty(
+    prefix = "discodeit.storage",
+    name = "type",
+    havingValue = "local",
+    matchIfMissing = false
+)
 public class LocalBinaryContentStorage implements BinaryContentStorage {
 
   private Path root;
@@ -48,9 +59,8 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     try (
         FileOutputStream fos = new FileOutputStream(path.toFile());
         BufferedOutputStream bs = new BufferedOutputStream(fos);
-        ObjectOutputStream oos = new ObjectOutputStream(bs)
     ) {
-      oos.writeObject(content);
+      bs.write(content);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -61,12 +71,10 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
   @Override
   public InputStream get(UUID binaryContentId) {
     Path path = resolvePath(binaryContentId);
-    try (
-        FileInputStream fos = new FileInputStream(path.toFile());
-        BufferedInputStream bs = new BufferedInputStream(fos);
-        ObjectInputStream oos = new ObjectInputStream(bs)
-    ) {
-      return oos;
+    try {
+      FileInputStream fos = new FileInputStream(path.toFile());
+      BufferedInputStream bs = new BufferedInputStream(fos);
+      return bs;
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -84,7 +92,11 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
       return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
-    return ResponseEntity.status(HttpStatus.OK).body(new InputStreamResource(stream));
+    return ResponseEntity.status(HttpStatus.OK)
+        .header(HttpHeaders.CONTENT_DISPOSITION,
+            "attachment; filename=\"" + dto.getId() + ".png\"") // ★ 다운로드 강제
+        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+        .body(new InputStreamResource(stream));
   }
 
   @Override

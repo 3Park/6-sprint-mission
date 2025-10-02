@@ -8,14 +8,17 @@ import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.entity.MessageAttatchment;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
+import com.sprint.mission.discodeit.repository.MessageAttatchmentRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -39,6 +42,7 @@ public class BasicMessageService implements MessageService {
   private final UserRepository userRepository;
   private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentStorage binaryContentStorage;
+  private final MessageAttatchmentRepository messageAttatchmentRepository;
 
   @Override
   public MessageDto create(MessageCreateRequest messageCreateRequest,
@@ -50,7 +54,14 @@ public class BasicMessageService implements MessageService {
     User user = userRepository.findById(authorId).orElseThrow(
         () -> new NoSuchElementException("User with id " + authorId + " does not exist"));
 
-    List<BinaryContent> attachmentIds = binaryContentCreateRequests.stream()
+    String content = messageCreateRequest.content();
+    Message message = new Message(
+        content,
+        channel,
+        user
+    );
+
+    List<MessageAttatchment> attachmentIds = Optional.of(binaryContentCreateRequests.stream()
         .map(attachmentRequest -> {
           String fileName = attachmentRequest.fileName();
           String contentType = attachmentRequest.contentType();
@@ -60,18 +71,15 @@ public class BasicMessageService implements MessageService {
               contentType);
 
           binaryContentStorage.put(binaryContent.getId(), bytes);
-          return binaryContentRepository.save(binaryContent);
+          binaryContentRepository.save(binaryContent);
+
+          MessageAttatchment messageAttatchment = new MessageAttatchment(message, binaryContent);
+
+          return messageAttatchmentRepository.save(messageAttatchment);
         })
-        .toList();
+        .toList()).orElse(null);
 
-    String content = messageCreateRequest.content();
-    Message message = new Message(
-        content,
-        channel,
-        user,
-        attachmentIds
-    );
-
+    message.setAttatchments(attachmentIds);
     return new MessageDto(messageRepository.save(message));
   }
 
@@ -90,7 +98,7 @@ public class BasicMessageService implements MessageService {
       String pageSortType) {
 
     Sort.Direction direction = Sort.Direction.ASC;
-    if (pageSortType != "ASC") {
+    if (pageSortType.equals("ASC")) {
       direction = Sort.Direction.DESC;
     }
 

@@ -20,6 +20,11 @@ public class UserDto {
     this.id = user.getId();
     this.username = user.getUsername();
     this.email = user.getEmail();
+
+    if (user.getProfile() == null) {
+      return;
+    }
+
     this.profile = new BinaryContentDto(user.getProfile());
   }
 

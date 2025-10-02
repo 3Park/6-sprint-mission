@@ -7,13 +7,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-@Component
-@ConditionalOnProperty(
-    prefix = "discodeit.storage",
-    name = "type",
-    havingValue = "local",
-    matchIfMissing = false
-)
 public interface BinaryContentStorage {
 
   UUID put(UUID binaryContentId, byte[] content);

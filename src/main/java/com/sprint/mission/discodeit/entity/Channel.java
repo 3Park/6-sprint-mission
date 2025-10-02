@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.entity;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
@@ -12,9 +13,9 @@ import java.time.Instant;
 import java.util.UUID;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Setter(value = AccessLevel.PROTECTED)
 @Getter
 @Table(name = "channels")
@@ -26,7 +27,12 @@ public class Channel extends BaseUpdatableEntity {
   private String name;
   private String description;
 
+  public Channel() {
+    this.id = UUID.randomUUID();
+  }
+
   public Channel(ChannelType type, String name, String description) {
+    this.id = UUID.randomUUID();
     this.type = type;
     this.name = name;
     this.description = description;

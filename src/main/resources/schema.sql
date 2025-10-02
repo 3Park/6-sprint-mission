@@ -5,7 +5,6 @@ CREATE TABLE public.binary_contents
     file_name    varchar(255) NOT NULL,
     "size"       bigint       NOT NULL,
     content_type varchar(100) NOT NULL,
-    bytes        bytea        NOT NULL,
     CONSTRAINT pk_id PRIMARY KEY (id)
 );
 

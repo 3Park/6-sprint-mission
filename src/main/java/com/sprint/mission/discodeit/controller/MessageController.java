@@ -52,7 +52,7 @@ public class MessageController {
               }
             })
             .toList())
-        .orElse(new ArrayList<>());
+        .orElse(null);
 
     MessageCreateRequest messageCreateRequest = new ObjectMapper().readValue(req,
         MessageCreateRequest.class);
