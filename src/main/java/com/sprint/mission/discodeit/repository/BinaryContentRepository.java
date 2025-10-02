@@ -5,14 +5,16 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface BinaryContentRepository {
+@Repository
+public interface BinaryContentRepository extends JpaRepository<BinaryContent, UUID> {
 
-  BinaryContent save(BinaryContent binaryContent);
 
   Optional<BinaryContent> findById(UUID id);
 
-  List<BinaryContent> findAllByIdIn(List<UUID> ids);
+  Optional<List<BinaryContent>> findAllByIdIn(List<UUID> ids);
 
   boolean existsById(UUID id);
 

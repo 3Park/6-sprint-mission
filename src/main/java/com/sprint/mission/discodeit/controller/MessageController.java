@@ -2,13 +2,16 @@ package com.sprint.mission.discodeit.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.dto.data.MessageDto;
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
+import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.service.MessageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +34,7 @@ public class MessageController {
   private final MessageService messageService;
 
   @PostMapping
-  public ResponseEntity<Message> create(
+  public ResponseEntity<MessageDto> create(
       @RequestPart("messageCreateRequest") String req,
       @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments
   ) throws JsonProcessingException {
@@ -53,16 +56,16 @@ public class MessageController {
 
     MessageCreateRequest messageCreateRequest = new ObjectMapper().readValue(req,
         MessageCreateRequest.class);
-    Message createdMessage = messageService.create(messageCreateRequest, attachmentRequests);
+    MessageDto createdMessage = messageService.create(messageCreateRequest, attachmentRequests);
     return ResponseEntity
         .status(HttpStatus.CREATED)
         .body(createdMessage);
   }
 
   @PatchMapping(value = "/{messageId}")
-  public ResponseEntity<Message> update(@PathVariable("messageId") UUID messageId,
+  public ResponseEntity<MessageDto> update(@PathVariable("messageId") UUID messageId,
       @RequestBody MessageUpdateRequest request) {
-    Message updatedMessage = messageService.update(messageId, request);
+    MessageDto updatedMessage = messageService.update(messageId, request);
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(updatedMessage);
@@ -77,9 +80,11 @@ public class MessageController {
   }
 
   @GetMapping
-  public ResponseEntity<List<Message>> findAllByChannelId(
-      @RequestParam("channelId") UUID channelId) {
-    List<Message> messages = messageService.findAllByChannelId(channelId);
+  public ResponseEntity<PageResponse<Message>> findAllByChannelId(
+      @RequestParam("channelId") UUID channelId,
+      @RequestParam(defaultValue = "0") Integer page,
+      @RequestParam(defaultValue = "ASC") String orderBy) {
+    PageResponse<Message> messages = messageService.findAllByChannelId(channelId, page, orderBy);
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(messages);
