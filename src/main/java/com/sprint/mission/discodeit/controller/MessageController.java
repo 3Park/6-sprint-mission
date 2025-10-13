@@ -80,11 +80,11 @@ public class MessageController {
   }
 
   @GetMapping
-  public ResponseEntity<PageResponse<Message>> findAllByChannelId(
+  public ResponseEntity<PageResponse<MessageDto>> findAllByChannelId(
       @RequestParam("channelId") UUID channelId,
       @RequestParam(defaultValue = "0") Integer page,
       @RequestParam(defaultValue = "ASC") String orderBy) {
-    PageResponse<Message> messages = messageService.findAllByChannelId(channelId, page, orderBy);
+    PageResponse<MessageDto> messages = messageService.findAllByChannelId(channelId, page, orderBy);
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(messages);

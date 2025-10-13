@@ -74,13 +74,14 @@ public class BasicMessageService implements MessageService {
           binaryContentRepository.save(binaryContent);
 
           MessageAttatchment messageAttatchment = new MessageAttatchment(message, binaryContent);
-
-          return messageAttatchmentRepository.save(messageAttatchment);
+          return messageAttatchment;
         })
         .toList()).orElse(null);
 
     message.setAttatchments(attachmentIds);
-    return new MessageDto(messageRepository.save(message));
+    Message createdMessage = messageRepository.save(message);
+
+    return new MessageDto(createdMessage);
   }
 
   @Override
@@ -94,7 +95,7 @@ public class BasicMessageService implements MessageService {
 
   @Override
   @Transactional(readOnly = true)
-  public PageResponse<Message> findAllByChannelId(UUID channelId, Integer page,
+  public PageResponse<MessageDto> findAllByChannelId(UUID channelId, Integer page,
       String pageSortType) {
 
     Sort.Direction direction = Sort.Direction.ASC;
@@ -103,7 +104,8 @@ public class BasicMessageService implements MessageService {
     }
 
     Pageable pageable = PageRequest.of(page, 50, Sort.by(direction, "createdAt"));
-    return PageResponseMapper.fromPage(messageRepository.findAllByChannelId(channelId, pageable));
+    return PageResponseMapper.fromPage(
+        messageRepository.findAllByChannelId(channelId, pageable).map(MessageDto::new));
   }
 
   @Override

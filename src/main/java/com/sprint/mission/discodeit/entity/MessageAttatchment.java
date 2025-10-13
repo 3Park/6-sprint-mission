@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.Getter;
@@ -25,11 +26,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Table(name = "message_attatchments")
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
-public class MessageAttatchment {
-
-  @Id
-  @Column(name = "id", nullable = false)
-  private UUID id;
+public class MessageAttatchment extends BaseEntity {
 
   @NotNull
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -42,10 +39,6 @@ public class MessageAttatchment {
   @OnDelete(action = OnDeleteAction.CASCADE)
   @JoinColumn(name = "attatchment_id", nullable = false)
   private BinaryContent attatchment;
-
-  @CreatedDate
-  @Column(name = "create_at", nullable = false)
-  private OffsetDateTime createAt;
 
   public MessageAttatchment(Message message, BinaryContent attatchment) {
     this.message = message;

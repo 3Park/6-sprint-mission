@@ -43,6 +43,7 @@ public class ReadStatus extends BaseUpdatableEntity {
     this.id = UUID.randomUUID();
     this.user = user;
     this.channel = channel;
+    this.lastReadAt = lastReadAt;
   }
 
   public void update(Instant lastReadAt) {

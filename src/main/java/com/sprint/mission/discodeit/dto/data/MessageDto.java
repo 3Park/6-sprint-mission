@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.entity.MessageAttatchment;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.Getter;
 
@@ -24,9 +25,12 @@ public class MessageDto {
     this.content = message.getContent();
     this.channelId = message.getChannel().getId();
     this.author = new UserDto(message.getAuthor());
-    if (message.getAttachments() != null) {
-      this.attachments = message.getAttachments().stream().map(MessageAttatchmentDto::new).toList();
-    }
+    this.attachments = Optional.of(message.getAttachments()
+            .stream()
+            .map(MessageAttatchmentDto::new).
+            toList())
+        .orElse(null);
+
     this.createdAt = message.getCreatedAt();
     this.updatedAt = message.getUpdatedAt();
     this.id = message.getId();
