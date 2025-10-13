@@ -77,6 +77,9 @@ CREATE TABLE public.messages (
 CREATE TABLE public.message_attatchments (
                                              message_id uuid NOT NULL,
                                              attatchment_id uuid NOT NULL,
-                                             CONSTRAINT message_attatchments_messages_fk FOREIGN KEY (message_id) REFERENCES public.messages(id) ON DELETE CASCADE,
-                                             CONSTRAINT message_attatchments_binary_contents_fk FOREIGN KEY (attatchment_id) REFERENCES public.binary_contents(id) ON DELETE CASCADE
+                                             id uuid NOT NULL,
+                                             created_at timestamptz NOT NULL,
+                                             CONSTRAINT message_attatchments_pk PRIMARY KEY (id),
+                                             CONSTRAINT message_attatchments_binary_contents_fk FOREIGN KEY (attatchment_id) REFERENCES public.binary_contents(id) ON DELETE CASCADE,
+                                             CONSTRAINT message_attatchments_messages_fk FOREIGN KEY (message_id) REFERENCES public.messages(id) ON DELETE CASCADE
 );
