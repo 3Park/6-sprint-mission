@@ -1,21 +1,14 @@
 package com.sprint.mission.discodeit.dto.data;
 
-import com.sprint.mission.discodeit.entity.BinaryContent;
-import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.dto.data.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.entity.MessageAttatchment;
-import jakarta.persistence.Column;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.validation.constraints.NotNull;
-import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.Getter;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.springframework.data.annotation.CreatedDate;
+import lombok.Setter;
+
 
 @Getter
+@Setter
 public class MessageAttatchmentDto {
 
   private UUID id;
@@ -25,7 +18,8 @@ public class MessageAttatchmentDto {
     this.id = messageAttatchment.getId();
 
     if (messageAttatchment.getAttatchment() != null) {
-      this.attatchment = new BinaryContentDto(messageAttatchment.getAttatchment());
+      this.attatchment = BinaryContentMapper.INSTANCE.toDto(
+          messageAttatchment.getAttatchment());
     }
   }
 }

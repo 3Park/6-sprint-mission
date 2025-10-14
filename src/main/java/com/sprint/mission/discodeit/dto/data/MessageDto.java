@@ -9,30 +9,24 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
-public class MessageDto {
+@Setter
+public class MessageDto extends PageDto {
 
   private UUID id;
-  private Instant createdAt;
   private Instant updatedAt;
   private String content;
   private UUID channelId;
   private UserDto author;
   private List<MessageAttatchmentDto> attachments;
 
-  public MessageDto(Message message) {
-    this.content = message.getContent();
-    this.channelId = message.getChannel().getId();
-    this.author = new UserDto(message.getAuthor());
-    this.attachments = Optional.of(message.getAttachments()
+  public void setAttachments(List<MessageAttatchment> messageAttatchments) {
+    this.attachments = Optional.of(messageAttatchments
             .stream()
             .map(MessageAttatchmentDto::new).
             toList())
         .orElse(null);
-
-    this.createdAt = message.getCreatedAt();
-    this.updatedAt = message.getUpdatedAt();
-    this.id = message.getId();
   }
 }

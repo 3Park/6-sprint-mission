@@ -1,13 +1,15 @@
 package com.sprint.mission.discodeit.dto.data;
 
+import com.sprint.mission.discodeit.dto.data.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
-import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 public class UserDto {
 
   private UUID id;
@@ -16,16 +18,8 @@ public class UserDto {
   private BinaryContentDto profile;
   private Boolean online = false;
 
-  public UserDto(User user) {
-    this.id = user.getId();
-    this.username = user.getUsername();
-    this.email = user.getEmail();
-
-    if (user.getProfile() == null) {
-      return;
-    }
-
-    this.profile = new BinaryContentDto(user.getProfile());
+  public void setProfile(BinaryContent profile) {
+    this.profile = Optional.of(BinaryContentMapper.INSTANCE.toDto(profile)).orElse(null);
   }
 
   public void update(Boolean online) {

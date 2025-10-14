@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.data.MessageDto;
+import com.sprint.mission.discodeit.dto.data.mapper.MessageMapper;
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
@@ -18,6 +19,7 @@ import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import java.time.Instant;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -80,8 +82,9 @@ public class BasicMessageService implements MessageService {
 
     message.setAttatchments(attachmentIds);
     Message createdMessage = messageRepository.save(message);
-
-    return new MessageDto(createdMessage);
+    MessageDto messageDto = MessageMapper.INSTANCE.toDto(createdMessage);
+    messageDto.setAttachments(createdMessage.getAttachments());
+    return messageDto;
   }
 
   @Override
@@ -90,12 +93,15 @@ public class BasicMessageService implements MessageService {
     Message message = messageRepository.findById(messageId)
         .orElseThrow(
             () -> new NoSuchElementException("Message with id " + messageId + " not found"));
-    return new MessageDto(message);
+
+    MessageDto messageDto = MessageMapper.INSTANCE.toDto(message);
+    messageDto.setAttachments(message.getAttachments());
+    return messageDto;
   }
 
   @Override
   @Transactional(readOnly = true)
-  public PageResponse<MessageDto> findAllByChannelId(UUID channelId, Integer page,
+  public PageResponse<MessageDto> findAllByChannelId(UUID channelId, Instant createdAt,
       String pageSortType) {
 
     Sort.Direction direction = Sort.Direction.ASC;
@@ -103,9 +109,25 @@ public class BasicMessageService implements MessageService {
       direction = Sort.Direction.DESC;
     }
 
-    Pageable pageable = PageRequest.of(page, 50, Sort.by(direction, "createdAt"));
-    return PageResponseMapper.fromPage(
-        messageRepository.findAllByChannelId(channelId, pageable).map(MessageDto::new));
+    Pageable pageable = PageRequest.of(0, 50, Sort.by(direction, "createdAt"));
+
+    if (createdAt != null) {
+      return PageResponseMapper.fromSlice(
+          messageRepository.findSliceAllByChannelIdAndCreatedAtAfter(channelId, createdAt, pageable)
+              .map(x -> {
+                MessageDto dto = MessageMapper.INSTANCE.toDto(x);
+                dto.setAttachments(x.getAttachments());
+                return dto;
+              }));
+    } else {
+      return PageResponseMapper.fromSlice(
+          messageRepository.findAllByChannelId(channelId, pageable)
+              .map(x -> {
+                MessageDto dto = MessageMapper.INSTANCE.toDto(x);
+                dto.setAttachments(x.getAttachments());
+                return dto;
+              }));
+    }
   }
 
   @Override
@@ -115,7 +137,11 @@ public class BasicMessageService implements MessageService {
         .orElseThrow(
             () -> new NoSuchElementException("Message with id " + messageId + " not found"));
     message.update(newContent);
-    return new MessageDto(messageRepository.save(message));
+
+    MessageDto messageDto = MessageMapper.INSTANCE.toDto(message);
+    messageDto.setAttachments(message.getAttachments());
+
+    return messageDto;
   }
 
   @Override

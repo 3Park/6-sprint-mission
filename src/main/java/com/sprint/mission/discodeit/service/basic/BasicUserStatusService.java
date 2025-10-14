@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.data.UserStatusDto;
+import com.sprint.mission.discodeit.dto.data.mapper.UserStatusMapper;
 import com.sprint.mission.discodeit.dto.request.UserStatusCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserStatusUpdateRequest;
 import com.sprint.mission.discodeit.entity.User;
@@ -37,7 +38,7 @@ public class BasicUserStatusService implements UserStatusService {
 
     Instant lastActiveAt = request.lastActiveAt();
     UserStatus userStatus = new UserStatus(user, lastActiveAt);
-    return new UserStatusDto(userStatusRepository.save(userStatus));
+    return UserStatusMapper.INSTANCE.toDto(userStatusRepository.save(userStatus));
   }
 
   @Override
@@ -47,14 +48,14 @@ public class BasicUserStatusService implements UserStatusService {
         .orElseThrow(
             () -> new NoSuchElementException("UserStatus with id " + userStatusId + " not found"));
 
-    return new UserStatusDto(staus);
+    return UserStatusMapper.INSTANCE.toDto(userStatusRepository.save(staus));
   }
 
   @Override
   @Transactional(readOnly = true)
   public List<UserStatusDto> findAll() {
     return userStatusRepository.findAll().stream()
-        .map(UserStatusDto::new)
+        .map(UserStatusMapper.INSTANCE::toDto)
         .toList();
   }
 
@@ -67,7 +68,7 @@ public class BasicUserStatusService implements UserStatusService {
             () -> new NoSuchElementException("UserStatus with id " + userStatusId + " not found"));
     userStatus.update(newLastActiveAt);
 
-    return new UserStatusDto(userStatusRepository.save(userStatus));
+    return UserStatusMapper.INSTANCE.toDto(userStatusRepository.save(userStatus));
   }
 
   @Override
@@ -79,7 +80,7 @@ public class BasicUserStatusService implements UserStatusService {
             () -> new NoSuchElementException("UserStatus with userId " + userId + " not found"));
     userStatus.update(newLastActiveAt);
 
-    return new UserStatusDto(userStatusRepository.save(userStatus));
+    return UserStatusMapper.INSTANCE.toDto(userStatusRepository.save(userStatus));
   }
 
   @Override

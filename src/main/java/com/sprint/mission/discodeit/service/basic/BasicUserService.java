@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.data.UserDto;
+import com.sprint.mission.discodeit.dto.data.mapper.UserMapper;
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
@@ -66,8 +67,9 @@ public class BasicUserService implements UserService {
     Instant now = Instant.now();
     UserStatus userStatus = new UserStatus(createdUser, now);
     userStatusRepository.save(userStatus);
-
-    return new UserDto(createdUser);
+    UserDto dto = UserMapper.INSTANCE.toDto(createdUser);
+    dto.setProfile(createdUser.getProfile());
+    return dto;
   }
 
   @Override
@@ -77,7 +79,9 @@ public class BasicUserService implements UserService {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new NoSuchElementException("no user with id: " + userId));
 
-    return new UserDto(user);
+    UserDto dto = UserMapper.INSTANCE.toDto(user);
+    dto.setProfile(user.getProfile());
+    return dto;
   }
 
   @Override
@@ -85,7 +89,11 @@ public class BasicUserService implements UserService {
   public List<UserDto> findAll() {
     return userRepository.findAll()
         .stream()
-        .map(UserDto::new)
+        .map(x -> {
+          UserDto dto = UserMapper.INSTANCE.toDto(x);
+          dto.setProfile(x.getProfile());
+          return dto;
+        })
         .toList();
   }
 
@@ -126,7 +134,9 @@ public class BasicUserService implements UserService {
     String newPassword = userUpdateRequest.newPassword();
     user.update(newUsername, newEmail, newPassword, nullableProfileId);
 
-    return new UserDto(userRepository.save(user));
+    UserDto dto = UserMapper.INSTANCE.toDto(user);
+    dto.setProfile(user.getProfile());
+    return dto;
   }
 
   @Override

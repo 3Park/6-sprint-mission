@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.data.UserDto;
+import com.sprint.mission.discodeit.dto.data.mapper.UserMapper;
 import com.sprint.mission.discodeit.dto.request.LoginRequest;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.UserRepository;
@@ -31,7 +32,8 @@ public class BasicAuthService implements AuthService {
       throw new IllegalArgumentException("Wrong password");
     }
 
-    UserDto dto = new UserDto(user);
+    UserDto dto = UserMapper.INSTANCE.toDto(user);
+    dto.setProfile(user.getProfile());
     dto.update(true);
     return dto;
   }

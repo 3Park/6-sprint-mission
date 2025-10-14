@@ -10,6 +10,7 @@ import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.service.MessageService;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -82,9 +83,10 @@ public class MessageController {
   @GetMapping
   public ResponseEntity<PageResponse<MessageDto>> findAllByChannelId(
       @RequestParam("channelId") UUID channelId,
-      @RequestParam(defaultValue = "0") Integer page,
+      @RequestParam(required = false) Instant createdAt,
       @RequestParam(defaultValue = "ASC") String orderBy) {
-    PageResponse<MessageDto> messages = messageService.findAllByChannelId(channelId, page, orderBy);
+    PageResponse<MessageDto> messages = messageService.findAllByChannelId(channelId, createdAt,
+        orderBy);
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(messages);

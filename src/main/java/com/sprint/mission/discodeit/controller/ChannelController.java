@@ -31,7 +31,7 @@ public class ChannelController {
 
   private final ChannelService channelService;
 
-  @PostMapping("public")
+  @PostMapping("/public")
   public ResponseEntity<ChannelDto> create(@RequestBody PublicChannelCreateRequest request) {
     ChannelDto createdChannel = channelService.create(request);
     return ResponseEntity
@@ -39,7 +39,7 @@ public class ChannelController {
         .body(createdChannel);
   }
 
-  @PostMapping("private")
+  @PostMapping("/private")
   public ResponseEntity<ChannelDto> create(@RequestBody PrivateChannelCreateRequest request) {
     ChannelDto createdChannel = channelService.create(request);
     return ResponseEntity

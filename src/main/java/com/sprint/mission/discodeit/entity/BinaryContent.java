@@ -17,7 +17,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Setter(value = AccessLevel.PROTECTED)
 @Getter
 @Table(name = "binary_contents")
-@EntityListeners(AuditingEntityListener.class)
 public class BinaryContent extends BaseEntity {
 
   @Column(name = "file_name")

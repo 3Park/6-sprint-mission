@@ -2,6 +2,8 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.data.ChannelDto;
 import com.sprint.mission.discodeit.dto.data.UserDto;
+import com.sprint.mission.discodeit.dto.data.mapper.ChannelMapper;
+import com.sprint.mission.discodeit.dto.data.mapper.UserMapper;
 import com.sprint.mission.discodeit.dto.request.PrivateChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
@@ -9,6 +11,7 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.ReadStatus;
+import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
@@ -42,7 +45,7 @@ public class BasicChannelService implements ChannelService {
     Channel channel = new Channel(ChannelType.PUBLIC, name, description);
     channelRepository.save(channel);
 
-    return new ChannelDto(channel);
+    return ChannelMapper.INSTANCE.toDto(channel);
   }
 
   @Override
@@ -57,11 +60,17 @@ public class BasicChannelService implements ChannelService {
         .forEach(readStatusRepository::save);
 
     List<UserDto> users = request.participantIds().stream()
-        .map(userId -> new UserDto(userRepository.findById(userId).orElseThrow()))
+        .map(userId ->
+        {
+          User user = userRepository.findById(userId).orElseThrow();
+          UserDto dto = UserMapper.INSTANCE.toDto(user);
+          dto.setProfile(user.getProfile());
+          return dto;
+        })
         .toList();
 
-    ChannelDto channelDto = new ChannelDto(createdChannel);
-    channelDto.setParticipantIds(users);
+    ChannelDto channelDto = ChannelMapper.INSTANCE.toDto(createdChannel);
+    channelDto.setParticipants(users);
 
     return channelDto;
   }
@@ -74,7 +83,8 @@ public class BasicChannelService implements ChannelService {
         .orElseThrow(() -> new NoSuchElementException("no channel with id " + channelId));
 
     Pageable pageable = PageRequest.of(0, 1, Sort.by("createdAt").descending());
-    Instant lastMessageAt = messageRepository.findAllByChannelId(channelId, pageable)
+    Instant lastMessageAt = messageRepository.findSliceAllByChannelIdAndCreatedAtAfter(channelId,
+            null, pageable)
         .stream()
         .map(Message::getCreatedAt)
         .findFirst()
@@ -84,13 +94,18 @@ public class BasicChannelService implements ChannelService {
     if (channel.getType().equals(ChannelType.PRIVATE)) {
       readStatusRepository.findAllByChannelId(channel.getId()).orElseThrow()
           .stream()
-          .map(x -> new UserDto(x.getUser()))
+          .map(x -> {
+            User user = x.getUser();
+            UserDto dto = UserMapper.INSTANCE.toDto(user);
+            dto.setProfile(user.getProfile());
+            return dto;
+          })
           .forEach(participantIds::add);
     }
 
-    ChannelDto dto = new ChannelDto(channel);
+    ChannelDto dto = ChannelMapper.INSTANCE.toDto(channel);
     dto.setLastMessageAt(lastMessageAt);
-    dto.setParticipantIds(participantIds);
+    dto.setParticipants(participantIds);
     return dto;
   }
 
@@ -99,7 +114,7 @@ public class BasicChannelService implements ChannelService {
   public List<ChannelDto> findAllByUserId(UUID userId) {
 
     return readStatusRepository.findAllByUserId(userId).orElseThrow().stream()
-        .map(x -> new ChannelDto(x.getChannel()))
+        .map(x -> ChannelMapper.INSTANCE.toDto(x.getChannel()))
         .toList();
   }
 
@@ -115,7 +130,7 @@ public class BasicChannelService implements ChannelService {
     }
 
     channel.update(newName, newDescription);
-    return new ChannelDto(channelRepository.save(channel));
+    return ChannelMapper.INSTANCE.toDto(channelRepository.save(channel));
   }
 
   @Override

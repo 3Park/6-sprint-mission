@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
+import com.sprint.mission.discodeit.dto.data.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
@@ -35,7 +36,7 @@ public class BasicBinaryContentService implements BinaryContentService {
 
     binaryContentStorage.put(binaryContent.getId(), bytes);
 
-    return new BinaryContentDto(binaryContent);
+    return BinaryContentMapper.INSTANCE.toDto(binaryContent);
   }
 
   @Override
@@ -45,14 +46,14 @@ public class BasicBinaryContentService implements BinaryContentService {
         .orElseThrow(() -> new NoSuchElementException(
             "BinaryContent with id " + binaryContentId + " not found"));
 
-    return new BinaryContentDto(content);
+    return BinaryContentMapper.INSTANCE.toDto(content);
   }
 
   @Override
   @Transactional(readOnly = true)
   public List<BinaryContentDto> findAllByIdIn(List<UUID> binaryContentIds) {
     return binaryContentRepository.findAllByIdIn(binaryContentIds).orElseThrow()
-        .stream().map(BinaryContentDto::new).toList();
+        .stream().map(BinaryContentMapper.INSTANCE::toDto).toList();
   }
 
   @Override

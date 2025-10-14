@@ -6,19 +6,14 @@ import com.sprint.mission.discodeit.entity.User;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 public class ReadStatusDto {
 
   private UUID id;
   private UUID userId;
   private UUID channelId;
   private Instant lastReadAt;
-
-  public ReadStatusDto(ReadStatus readStatus) {
-    this.userId = readStatus.getUser().getId();
-    this.channelId = readStatus.getChannel().getId();
-    this.lastReadAt = readStatus.getLastReadAt();
-    this.id = readStatus.getId();
-  }
 }

@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.data.ReadStatusDto;
+import com.sprint.mission.discodeit.dto.data.mapper.ReadStatusMapper;
 import com.sprint.mission.discodeit.dto.request.ReadStatusCreateRequest;
 import com.sprint.mission.discodeit.dto.request.ReadStatusUpdateRequest;
 import com.sprint.mission.discodeit.entity.Channel;
@@ -46,7 +47,7 @@ public class BasicReadStatusService implements ReadStatusService {
 
     Instant lastReadAt = request.lastReadAt();
     ReadStatus readStatus = new ReadStatus(user, channel, lastReadAt);
-    return new ReadStatusDto(readStatusRepository.save(readStatus));
+    return ReadStatusMapper.INSTANCE.toDto(readStatusRepository.save(readStatus));
   }
 
   @Override
@@ -55,7 +56,7 @@ public class BasicReadStatusService implements ReadStatusService {
     ReadStatus status = readStatusRepository.findById(readStatusId)
         .orElseThrow(
             () -> new NoSuchElementException("ReadStatus with id " + readStatusId + " not found"));
-    return new ReadStatusDto(status);
+    return ReadStatusMapper.INSTANCE.toDto(status);
   }
 
   @Override
@@ -63,7 +64,7 @@ public class BasicReadStatusService implements ReadStatusService {
   public List<ReadStatusDto> findAllByUserId(UUID userId) {
     return readStatusRepository.findAllByUserId(userId).orElseThrow()
         .stream()
-        .map(ReadStatusDto::new)
+        .map(ReadStatusMapper.INSTANCE::toDto)
         .toList();
   }
 
@@ -74,7 +75,7 @@ public class BasicReadStatusService implements ReadStatusService {
         .orElseThrow(
             () -> new NoSuchElementException("ReadStatus with id " + readStatusId + " not found"));
     readStatus.update(newLastReadAt);
-    return new ReadStatusDto(readStatusRepository.save(readStatus));
+    return ReadStatusMapper.INSTANCE.toDto(readStatusRepository.save(readStatus));
   }
 
   @Override
