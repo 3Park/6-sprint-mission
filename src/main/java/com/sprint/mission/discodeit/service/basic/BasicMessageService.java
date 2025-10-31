@@ -22,6 +22,7 @@ import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.time.Instant;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -35,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Service
 @Transactional
+@Slf4j
 public class BasicMessageService implements MessageService {
 
   private final MessageRepository messageRepository;
@@ -71,10 +73,10 @@ public class BasicMessageService implements MessageService {
           BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
               contentType);
 
-          binaryContentStorage.put(binaryContent.getId(), bytes);
-          binaryContentRepository.save(binaryContent);
+          BinaryContent created = binaryContentRepository.save(binaryContent);
+          binaryContentStorage.put(created.getId(), bytes);
 
-          MessageAttachment messageAttachment = new MessageAttachment(message, binaryContent);
+          MessageAttachment messageAttachment = new MessageAttachment(message, created);
           return messageAttachment;
         })
         .toList()).orElse(null);

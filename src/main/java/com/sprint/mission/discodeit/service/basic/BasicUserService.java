@@ -14,6 +14,7 @@ import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Service
 @Transactional
+@Slf4j
 public class BasicUserService implements UserService {
 
   private final UserRepository userRepository;
@@ -55,8 +57,9 @@ public class BasicUserService implements UserService {
           BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
               contentType);
 
-          binaryContentStorage.put(binaryContent.getId(), bytes);
-          return binaryContentRepository.save(binaryContent);
+          BinaryContent created = binaryContentRepository.save(binaryContent);
+          binaryContentStorage.put(created.getId(), bytes);
+          return created;
         })
         .orElse(null);
     String password = userCreateRequest.password();
@@ -67,8 +70,12 @@ public class BasicUserService implements UserService {
     Instant now = Instant.now();
     UserStatus userStatus = new UserStatus(createdUser, now);
     userStatusRepository.save(userStatus);
+
     UserDto dto = UserMapper.INSTANCE.toDto(createdUser);
     dto.setProfile(createdUser.getProfile());
+
+    log.info("Created user : {}", createdUser);
+
     return dto;
   }
 
@@ -126,8 +133,9 @@ public class BasicUserService implements UserService {
           BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
               contentType);
 
-          binaryContentStorage.put(binaryContent.getId(), bytes);
-          return binaryContentRepository.save(binaryContent);
+          BinaryContent created = binaryContentRepository.save(binaryContent);
+          binaryContentStorage.put(created.getId(), bytes);
+          return created;
         })
         .orElse(null);
 

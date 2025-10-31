@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -20,8 +21,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 public abstract class BaseEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(columnDefinition = "uuid", updatable = false, nullable = false)
+  @GeneratedValue(generator = "uuid2")  // UUID 생성 전략 지정
+  @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
+  @Column(columnDefinition = "UUID", updatable = false, nullable = false)
   protected UUID id;
 
   @CreatedDate

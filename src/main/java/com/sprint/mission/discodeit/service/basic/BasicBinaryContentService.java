@@ -8,6 +8,7 @@ import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,26 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Service
 @Transactional
+@Slf4j
 public class BasicBinaryContentService implements BinaryContentService {
 
   private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentStorage binaryContentStorage;
-
-  @Override
-  public BinaryContentDto create(BinaryContentCreateRequest request) {
-    String fileName = request.fileName();
-    byte[] bytes = request.bytes();
-    String contentType = request.contentType();
-    BinaryContent binaryContent = new BinaryContent(
-        fileName,
-        (long) bytes.length,
-        contentType
-    );
-
-    binaryContentStorage.put(binaryContent.getId(), bytes);
-
-    return BinaryContentMapper.INSTANCE.toDto(binaryContent);
-  }
 
   @Override
   @Transactional(readOnly = true)
@@ -45,6 +31,8 @@ public class BasicBinaryContentService implements BinaryContentService {
     BinaryContent content = binaryContentRepository.findById(binaryContentId)
         .orElseThrow(() -> new NoSuchElementException(
             "BinaryContent with id " + binaryContentId + " not found"));
+
+    log.info("download BinaryContent with id : {}", binaryContentId);
 
     return BinaryContentMapper.INSTANCE.toDto(content);
   }
