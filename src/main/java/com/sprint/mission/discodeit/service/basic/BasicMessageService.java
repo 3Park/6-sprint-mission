@@ -9,7 +9,7 @@ import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
-import com.sprint.mission.discodeit.entity.MessageAttatchment;
+import com.sprint.mission.discodeit.entity.MessageAttachment;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
@@ -22,7 +22,6 @@ import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.time.Instant;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -63,7 +62,7 @@ public class BasicMessageService implements MessageService {
         user
     );
 
-    List<MessageAttatchment> attachmentIds = Optional.of(binaryContentCreateRequests.stream()
+    List<MessageAttachment> attachmentIds = Optional.of(binaryContentCreateRequests.stream()
         .map(attachmentRequest -> {
           String fileName = attachmentRequest.fileName();
           String contentType = attachmentRequest.contentType();
@@ -75,8 +74,8 @@ public class BasicMessageService implements MessageService {
           binaryContentStorage.put(binaryContent.getId(), bytes);
           binaryContentRepository.save(binaryContent);
 
-          MessageAttatchment messageAttatchment = new MessageAttatchment(message, binaryContent);
-          return messageAttatchment;
+          MessageAttachment messageAttachment = new MessageAttachment(message, binaryContent);
+          return messageAttachment;
         })
         .toList()).orElse(null);
 

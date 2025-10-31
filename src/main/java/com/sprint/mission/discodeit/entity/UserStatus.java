@@ -1,8 +1,8 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
@@ -13,12 +13,12 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Setter(value = AccessLevel.PROTECTED)
 @Getter
 @Table(name = "user_statuses")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserStatus extends BaseUpdatableEntity {
 
   @OneToOne(fetch = FetchType.LAZY)
@@ -27,13 +27,9 @@ public class UserStatus extends BaseUpdatableEntity {
 
   @Column(name = "last_active_at")
   private Instant lastActiveAt;
-
-  public UserStatus() {
-    this.id = UUID.randomUUID();
-  }
-
+  
   public UserStatus(User user, Instant lastActiveAt) {
-    this.id = UUID.randomUUID();
+
     this.user = user;
     this.lastActiveAt = lastActiveAt;
   }

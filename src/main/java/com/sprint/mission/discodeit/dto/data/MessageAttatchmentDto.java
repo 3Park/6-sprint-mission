@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.dto.data;
 
 import com.sprint.mission.discodeit.dto.data.mapper.BinaryContentMapper;
-import com.sprint.mission.discodeit.entity.MessageAttatchment;
+import com.sprint.mission.discodeit.entity.MessageAttachment;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,12 +14,12 @@ public class MessageAttatchmentDto {
   private UUID id;
   private BinaryContentDto attatchment;
 
-  public MessageAttatchmentDto(MessageAttatchment messageAttatchment) {
-    this.id = messageAttatchment.getId();
+  public MessageAttatchmentDto(MessageAttachment messageAttachment) {
+    this.id = messageAttachment.getId();
 
-    if (messageAttatchment.getAttatchment() != null) {
+    if (messageAttachment.getAttatchment() != null) {
       this.attatchment = BinaryContentMapper.INSTANCE.toDto(
-          messageAttatchment.getAttatchment());
+          messageAttachment.getAttatchment());
     }
   }
 }

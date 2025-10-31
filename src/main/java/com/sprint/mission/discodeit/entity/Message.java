@@ -1,9 +1,9 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -12,18 +12,16 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 
-import java.io.Serializable;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Setter(value = AccessLevel.PROTECTED)
 @Getter
 @Table(name = "messages")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Message extends BaseUpdatableEntity {
 
   @Column
@@ -38,14 +36,10 @@ public class Message extends BaseUpdatableEntity {
   private User author;
 
   @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<MessageAttatchment> attachments;
+  private List<MessageAttachment> attachments;
 
-  public Message() {
-    this.id = UUID.randomUUID();
-  }
 
   public Message(String content, Channel channel, User author) {
-    this.id = UUID.randomUUID();
     this.content = content;
     this.channel = channel;
     this.author = author;
@@ -55,7 +49,7 @@ public class Message extends BaseUpdatableEntity {
     this.content = newContent;
   }
 
-  public void setAttatchments(List<MessageAttatchment> attatchments) {
+  public void setAttatchments(List<MessageAttachment> attatchments) {
     this.attachments = attatchments;
   }
 }

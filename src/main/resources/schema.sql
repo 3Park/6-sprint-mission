@@ -16,7 +16,7 @@ CREATE TABLE public.users (
                               username varchar(50) NOT NULL,
                               email varchar(100) NOT NULL,
                               "password" varchar(60) NOT NULL,
-                              profile_id uuid NOT NULL,
+                              profile_id uuid NULL,
                               CONSTRAINT username UNIQUE (username),
                               CONSTRAINT users_pk PRIMARY KEY (id),
                               CONSTRAINT email UNIQUE (email),
@@ -67,14 +67,14 @@ CREATE TABLE public.messages (
                                  updated_at timestamptz NULL,
                                  "content" text NULL,
                                  channel_id uuid NOT NULL,
-                                 author_id uuid NOT NULL,
+                                 author_id uuid NULL,
                                  CONSTRAINT messages_pk PRIMARY KEY (id),
                                  CONSTRAINT messages_channels_fk FOREIGN KEY (channel_id) REFERENCES public.channels(id) ON DELETE CASCADE,
                                  CONSTRAINT messages_users_fk FOREIGN KEY (author_id) REFERENCES public.users(id) ON DELETE SET NULL
 );
 
 
-CREATE TABLE public.message_attatchments (
+CREATE TABLE public.message_attachments (
                                              message_id uuid NOT NULL,
                                              attatchment_id uuid NOT NULL,
                                              id uuid NOT NULL,
