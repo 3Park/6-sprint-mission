@@ -1,3 +1,6 @@
+app:
+  version:1.7.0
+
 spring:
   application:
     name: discodeit
@@ -5,11 +8,8 @@ spring:
     multipart:
       maxFileSize: 10MB # 파일 하나의 최대 크기
       maxRequestSize: 30MB  # 한 번에 최대 업로드 가능 용량
-
-  jpa:
-    hibernate:
-      ddl-auto: none   # 운영 환경에서는 validate 또는 none 권장
-    show-sql: true        # 실행되는 SQL 출력. product 에서는 false
+      # 운영 환경에서는 validate 또는 none 권장
+      # 실행되는 SQL 출력. product 에서는 false
     properties:
       hibernate:
         format_sql: true   # SQL 보기 좋게 정렬
@@ -37,3 +37,12 @@ logging:
   level:
     org.hibernate.SQL: DEBUG            # 실행되는 SQL 로그
     org.hibernate.type.descriptor.sql: TRACE  # SQL에 바인딩되는 파라미터 값 출력
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics,loggers"
+  endpoint:
+    health:
+      show-details: always
