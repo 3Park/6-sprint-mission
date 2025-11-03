@@ -2,12 +2,23 @@ package com.sprint.mission.discodeit.exception;
 
 import com.sprint.mission.discodeit.exception.custom.base.DiscodeitException;
 import com.sprint.mission.discodeit.exception.custom.binary.EmptyIdsException;
+import com.sprint.mission.discodeit.exception.custom.channel.ChannelNotFoundException;
+import com.sprint.mission.discodeit.exception.custom.channel.PrivateChannelUpdateException;
 import com.sprint.mission.discodeit.exception.custom.common.NoPathVariableException;
 import com.sprint.mission.discodeit.exception.custom.message.MessageInputDataException;
+import com.sprint.mission.discodeit.exception.custom.message.MessageNotFoundException;
+import com.sprint.mission.discodeit.exception.custom.readstatus.ReadStatusAlreadyExsistException;
+import com.sprint.mission.discodeit.exception.custom.readstatus.ReadStatusNotFoundException;
+import com.sprint.mission.discodeit.exception.custom.user.UserAlreadyExsistsException;
 import com.sprint.mission.discodeit.exception.custom.user.UserInputDataException;
+import com.sprint.mission.discodeit.exception.custom.user.UserNotFoundException;
 import com.sprint.mission.discodeit.exception.custom.user.UserProfileException;
+import com.sprint.mission.discodeit.exception.custom.userstatus.UserStatusAlreadyExsistException;
+import com.sprint.mission.discodeit.exception.custom.userstatus.UserStatusNotFoundException;
 import com.sprint.mission.discodeit.exception.errorcode.ErrorCode;
 import com.sprint.mission.discodeit.exception.response.ErrorResponse;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +30,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -57,6 +67,66 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(error.getStatus()).body(error);
   }
 
+  @ExceptionHandler(UserNotFoundException.class)
+  public ResponseEntity<ErrorResponse> handleUserInputDataException(UserNotFoundException ex) {
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.NOT_FOUND);
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
+  @ExceptionHandler(ChannelNotFoundException.class)
+  public ResponseEntity<ErrorResponse> handleUserInputDataException(ChannelNotFoundException ex) {
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.NOT_FOUND);
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
+  @ExceptionHandler(MessageNotFoundException.class)
+  public ResponseEntity<ErrorResponse> handleUserInputDataException(MessageNotFoundException ex) {
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.NOT_FOUND);
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
+  @ExceptionHandler(ReadStatusNotFoundException.class)
+  public ResponseEntity<ErrorResponse> handleUserInputDataException(
+      ReadStatusNotFoundException ex) {
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.NOT_FOUND);
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
+  @ExceptionHandler(UserStatusNotFoundException.class)
+  public ResponseEntity<ErrorResponse> handleUserInputDataException(
+      UserStatusNotFoundException ex) {
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.NOT_FOUND);
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
+  @ExceptionHandler(PrivateChannelUpdateException.class)
+  public ResponseEntity<ErrorResponse> handleUserInputDataException(
+      PrivateChannelUpdateException ex) {
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.NOT_ACCEPTABLE);
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
+  @ExceptionHandler(UserAlreadyExsistsException.class)
+  public ResponseEntity<ErrorResponse> handleUserInputDataException(
+      UserAlreadyExsistsException ex) {
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.CONFLICT);
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
+  @ExceptionHandler(ReadStatusAlreadyExsistException.class)
+  public ResponseEntity<ErrorResponse> handleUserInputDataException(
+      ReadStatusAlreadyExsistException ex) {
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.CONFLICT);
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
+  @ExceptionHandler(UserStatusAlreadyExsistException.class)
+  public ResponseEntity<ErrorResponse> handleUserInputDataException(
+      UserStatusAlreadyExsistException ex) {
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.CONFLICT);
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
   @ExceptionHandler(NoHandlerFoundException.class)
   public ResponseEntity<ErrorResponse> handleTypeMismatch(NoHandlerFoundException ex) {
     NoPathVariableException exception = new NoPathVariableException(ErrorCode.NO_PATH_VARIABLE,
@@ -69,6 +139,13 @@ public class GlobalExceptionHandler {
    * 모든 경우를 커스텀 Exception으로 만드는것은 맞지 않아
    * 일반 오류들도 ErrorRespose로 전달 할 수 있도록 추가.
    *  */
+
+  @ExceptionHandler(ConstraintViolationException.class)
+  public ResponseEntity<ErrorResponse> handleValidationException(
+      ConstraintViolationException ex) {
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.BAD_REQUEST);
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
 
   // 400 잘못된 요청
   @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -112,6 +189,8 @@ public class GlobalExceptionHandler {
   // 500 서버 내부 오류 (예상치 못한 모든 오류 처리)
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleException(Exception ex) {
+    log.debug(ex.getMessage(), ex.getStackTrace());
+    log.error(ex.getMessage(), ex);
     ErrorResponse error = createErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR);
     return ResponseEntity.status(error.getStatus()).body(error);
   }
@@ -136,6 +215,21 @@ public class GlobalExceptionHandler {
             .collect(
                 Collectors.toUnmodifiableMap(FieldError::getField, FieldError::getDefaultMessage
                     , (existing, replacement) -> existing + ", " + replacement));
+      } else if (ex instanceof ConstraintViolationException) {
+        errorDetails = ((ConstraintViolationException) ex)
+            .getConstraintViolations()
+            .stream()
+            .collect(Collectors.toUnmodifiableMap(
+                violation -> {
+                  // 어떤 파라미터/속성에서 오류가 났는지
+                  // ex: "createUser.name" → 마지막 점(.) 이후만 사용하면 "name"
+                  String path = violation.getPropertyPath().toString();
+                  int lastDot = path.lastIndexOf('.');
+                  return lastDot != -1 ? path.substring(lastDot + 1) : path;
+                },
+                ConstraintViolation::getMessage,
+                (existing, replacement) -> existing + ", " + replacement // 충돌 처리
+            ));
       }
 
       ErrorResponse error = ErrorResponse.builder()

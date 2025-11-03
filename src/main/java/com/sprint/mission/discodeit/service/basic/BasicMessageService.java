@@ -11,6 +11,10 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.MessageAttachment;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.exception.custom.channel.ChannelNotFoundException;
+import com.sprint.mission.discodeit.exception.custom.message.MessageNotFoundException;
+import com.sprint.mission.discodeit.exception.custom.user.UserNotFoundException;
+import com.sprint.mission.discodeit.exception.errorcode.ErrorCode;
 import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
@@ -20,6 +24,7 @@ import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +34,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,9 +57,10 @@ public class BasicMessageService implements MessageService {
     UUID channelId = messageCreateRequest.channelId();
     UUID authorId = messageCreateRequest.authorId();
     Channel channel = channelRepository.findById(channelId).orElseThrow(
-        () -> new NoSuchElementException("Channel with id " + channelId + " does not exist"));
+        () -> new ChannelNotFoundException(ErrorCode.CHANNEL_NOT_FOUND,
+            Map.of("channdId", channelId)));
     User user = userRepository.findById(authorId).orElseThrow(
-        () -> new NoSuchElementException("User with id " + authorId + " does not exist"));
+        () -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND, Map.of("authorId", authorId)));
 
     String content = messageCreateRequest.content();
     Message message = new Message(
@@ -63,6 +68,10 @@ public class BasicMessageService implements MessageService {
         channel,
         user
     );
+
+    log.info(
+        String.format("Creating message with content: %s, channelId : %s, userId : %s", content,
+            channelId, user.getId()));
 
     List<MessageAttachment> attachmentIds = Optional.of(binaryContentCreateRequests.stream()
         .map(attachmentRequest -> {
@@ -93,7 +102,8 @@ public class BasicMessageService implements MessageService {
   public MessageDto find(UUID messageId) {
     Message message = messageRepository.findById(messageId)
         .orElseThrow(
-            () -> new NoSuchElementException("Message with id " + messageId + " not found"));
+            () -> new MessageNotFoundException(ErrorCode.MESSAGE_NOT_FOUND,
+                Map.of("messageId", messageId)));
 
     MessageDto messageDto = MessageMapper.INSTANCE.toDto(message);
     messageDto.setAttachments(message.getAttachments());
@@ -136,7 +146,8 @@ public class BasicMessageService implements MessageService {
     String newContent = request.newContent();
     Message message = messageRepository.findById(messageId)
         .orElseThrow(
-            () -> new NoSuchElementException("Message with id " + messageId + " not found"));
+            () -> new MessageNotFoundException(ErrorCode.MESSAGE_NOT_FOUND,
+                Map.of("messageId", messageId)));
     message.update(newContent);
 
     MessageDto messageDto = MessageMapper.INSTANCE.toDto(message);
@@ -149,7 +160,8 @@ public class BasicMessageService implements MessageService {
   public void delete(UUID messageId) {
     Message message = messageRepository.findById(messageId)
         .orElseThrow(
-            () -> new NoSuchElementException("Message with id " + messageId + " not found"));
+            () -> new MessageNotFoundException(ErrorCode.MESSAGE_NOT_FOUND,
+                Map.of("messageId", messageId)));
 
     message.getAttachments()
         .forEach(x -> {

@@ -8,11 +8,15 @@ import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.exception.custom.user.UserAlreadyExsistsException;
+import com.sprint.mission.discodeit.exception.custom.user.UserNotFoundException;
+import com.sprint.mission.discodeit.exception.errorcode.ErrorCode;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -43,10 +47,10 @@ public class BasicUserService implements UserService {
     String email = userCreateRequest.email();
 
     if (userRepository.existsByEmail(email)) {
-      throw new IllegalArgumentException("User with email " + email + " already exists");
+      throw new UserAlreadyExsistsException(ErrorCode.DUPLICATE_USER, Map.of("email", email));
     }
     if (userRepository.existsByUsername(username)) {
-      throw new IllegalArgumentException("User with username " + username + " already exists");
+      throw new UserAlreadyExsistsException(ErrorCode.DUPLICATE_USER, Map.of("username", username));
     }
 
     BinaryContent nullableProfileId = optionalProfileCreateRequest
@@ -84,7 +88,8 @@ public class BasicUserService implements UserService {
   public UserDto find(UUID userId) {
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new NoSuchElementException("no user with id: " + userId));
+        .orElseThrow(
+            () -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND, Map.of("id", userId)));
 
     UserDto dto = UserMapper.INSTANCE.toDto(user);
     dto.setProfile(user.getProfile());
@@ -108,15 +113,17 @@ public class BasicUserService implements UserService {
   public UserDto update(UUID userId, UserUpdateRequest userUpdateRequest,
       Optional<BinaryContentCreateRequest> optionalProfileCreateRequest) {
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new NoSuchElementException("User with id " + userId + " not found"));
+        .orElseThrow(
+            () -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND, Map.of("id", userId)));
 
     String newUsername = userUpdateRequest.newUsername();
     String newEmail = userUpdateRequest.newEmail();
     if (userRepository.existsByEmail(newEmail)) {
-      throw new IllegalArgumentException("User with email " + newEmail + " already exists");
+      throw new UserAlreadyExsistsException(ErrorCode.DUPLICATE_USER, Map.of("email", newEmail));
     }
     if (userRepository.existsByUsername(newUsername)) {
-      throw new IllegalArgumentException("User with username " + newUsername + " already exists");
+      throw new UserAlreadyExsistsException(ErrorCode.DUPLICATE_USER,
+          Map.of("username", newUsername));
     }
 
     BinaryContent nullableProfileId = optionalProfileCreateRequest
@@ -150,7 +157,8 @@ public class BasicUserService implements UserService {
   @Override
   public void delete(UUID userId) {
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new NoSuchElementException("User with id " + userId + " not found"));
+        .orElseThrow(
+            () -> new UserNotFoundException(ErrorCode.USER_NOT_FOUND, Map.of("id", userId)));
 
     Optional.ofNullable(user.getProfile())
         .ifPresent(x ->
