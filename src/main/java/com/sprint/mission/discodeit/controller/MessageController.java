@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.controller;
 
+import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.dto.data.MessageDto;
@@ -9,8 +10,12 @@ import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.exception.custom.message.MessageInputDataException;
+import com.sprint.mission.discodeit.exception.errorcode.ErrorCode;
 import com.sprint.mission.discodeit.service.MessageService;
+import jakarta.validation.Valid;
 import java.time.Instant;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -38,34 +43,39 @@ public class MessageController {
   public ResponseEntity<MessageDto> create(
       @RequestPart("messageCreateRequest") String req,
       @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments
-  ) throws JsonProcessingException {
-    List<BinaryContentCreateRequest> attachmentRequests = Optional.ofNullable(attachments)
-        .map(files -> files.stream()
-            .map(file -> {
-              try {
-                return new BinaryContentCreateRequest(
-                    file.getOriginalFilename(),
-                    file.getContentType(),
-                    file.getBytes()
-                );
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
-            })
-            .toList())
-        .orElse(null);
+  ) {
+    try {
+      List<BinaryContentCreateRequest> attachmentRequests = Optional.ofNullable(attachments)
+          .map(files -> files.stream()
+              .map(file -> {
+                try {
+                  return new BinaryContentCreateRequest(
+                      file.getOriginalFilename(),
+                      file.getContentType(),
+                      file.getBytes()
+                  );
+                } catch (IOException e) {
+                  throw new MessageInputDataException(ErrorCode.INVALID_MESSAGE_DATA,
+                      Map.of("attatchments", attachments));
+                }
+              })
+              .toList())
+          .orElse(null);
 
-    MessageCreateRequest messageCreateRequest = new ObjectMapper().readValue(req,
-        MessageCreateRequest.class);
-    MessageDto createdMessage = messageService.create(messageCreateRequest, attachmentRequests);
-    return ResponseEntity
-        .status(HttpStatus.CREATED)
-        .body(createdMessage);
+      MessageCreateRequest messageCreateRequest = new ObjectMapper().readValue(req,
+          MessageCreateRequest.class);
+      MessageDto createdMessage = messageService.create(messageCreateRequest, attachmentRequests);
+      return ResponseEntity
+          .status(HttpStatus.CREATED)
+          .body(createdMessage);
+    } catch (JsonProcessingException ex) {
+      throw new MessageInputDataException(ErrorCode.INVALID_MESSAGE_DATA, Map.of("request", req));
+    }
   }
 
   @PatchMapping(value = "/{messageId}")
   public ResponseEntity<MessageDto> update(@PathVariable("messageId") UUID messageId,
-      @RequestBody MessageUpdateRequest request) {
+      @RequestBody @Valid MessageUpdateRequest request) {
     MessageDto updatedMessage = messageService.update(messageId, request);
     return ResponseEntity
         .status(HttpStatus.OK)

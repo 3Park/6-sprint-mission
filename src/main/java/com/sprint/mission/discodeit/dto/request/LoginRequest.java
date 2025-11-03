@@ -4,12 +4,10 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 public record LoginRequest(
-    @NotNull
-    @NotEmpty
+    @NotEmpty(message = "이름은 필수 입니다.")
     String username,
 
-    @NotNull
-    @NotEmpty
+    @NotEmpty(message = "비밀번호는 필수 입니다.")
     String password
 ) {
 

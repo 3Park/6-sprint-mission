@@ -8,13 +8,12 @@ import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserStatusUpdateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
-import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.custom.user.UserInputDataException;
+import com.sprint.mission.discodeit.exception.custom.user.UserProfileException;
 import com.sprint.mission.discodeit.exception.errorcode.ErrorCode;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.service.UserStatusService;
-import java.time.Instant;
+import jakarta.validation.Valid;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -55,7 +54,7 @@ public class UserController {
           .status(HttpStatus.CREATED)
           .body(createdUser);
     } catch (JsonProcessingException e) {
-      throw new UserInputDataException(ErrorCode.INVALID_UER_CREATE_DATA, Map.of("request", req));
+      throw new UserInputDataException(ErrorCode.INVALID_USER_DATA, Map.of("request", req));
     }
   }
 
@@ -64,16 +63,20 @@ public class UserController {
       @PathVariable("userId") UUID userId,
       @RequestPart("userUpdateRequest") String req,
       @RequestPart(value = "profile", required = false) MultipartFile profile
-  ) throws JsonProcessingException {
-    UserUpdateRequest userUpdateRequest = new ObjectMapper().readValue(req,
-        UserUpdateRequest.class);
+  ) {
+    try {
+      UserUpdateRequest userUpdateRequest = new ObjectMapper().readValue(req,
+          UserUpdateRequest.class);
 
-    Optional<BinaryContentCreateRequest> profileRequest = Optional.ofNullable(profile)
-        .flatMap(this::resolveProfileRequest);
-    UserDto updatedUser = userService.update(userId, userUpdateRequest, profileRequest);
-    return ResponseEntity
-        .status(HttpStatus.OK)
-        .body(updatedUser);
+      Optional<BinaryContentCreateRequest> profileRequest = Optional.ofNullable(profile)
+          .flatMap(this::resolveProfileRequest);
+      UserDto updatedUser = userService.update(userId, userUpdateRequest, profileRequest);
+      return ResponseEntity
+          .status(HttpStatus.OK)
+          .body(updatedUser);
+    } catch (JsonProcessingException e) {
+      throw new UserInputDataException(ErrorCode.INVALID_USER_DATA, Map.of("request", req));
+    }
   }
 
   @DeleteMapping(value = "/{userId}")
@@ -94,7 +97,7 @@ public class UserController {
 
   @PatchMapping(value = "/{userId}/userStatus")
   public ResponseEntity<UserStatusDto> updateUserStatusByUserId(@PathVariable("userId") UUID userId,
-      @RequestBody UserStatusUpdateRequest request) {
+      @RequestBody @Valid UserStatusUpdateRequest request) {
     UserStatusDto updatedUserStatus = userStatusService.updateByUserId(userId, request);
     return ResponseEntity
         .status(HttpStatus.OK)
@@ -113,7 +116,8 @@ public class UserController {
         );
         return Optional.of(binaryContentCreateRequest);
       } catch (IOException e) {
-        throw new RuntimeException(e);
+        throw new UserProfileException(ErrorCode.INVALID_PROFILE_DATA,
+            Map.of("request", profileFile));
       }
     }
   }
