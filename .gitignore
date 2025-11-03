@@ -97,3 +97,4 @@ build/tmp/compileJava/previous-compilation-data.bin
 .idea/modules.xml
 .idea/modules/discodeit.iml
 .idea/modules/discodeit.test.iml
+*.log
