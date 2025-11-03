@@ -12,6 +12,7 @@
 .gradle
 .gradle/**
 .discodeit
+.logs/**
 build/*
 
 # AWS User-specific
