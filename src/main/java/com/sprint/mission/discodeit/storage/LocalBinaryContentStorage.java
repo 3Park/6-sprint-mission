@@ -1,6 +1,8 @@
 package com.sprint.mission.discodeit.storage;
 
 import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
+import com.sprint.mission.discodeit.exception.custom.binary.BinaryIOException;
+import com.sprint.mission.discodeit.exception.errorcode.ErrorCode;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
@@ -12,7 +14,9 @@ import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.InputStreamResource;
@@ -24,6 +28,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 @ConditionalOnProperty(
     prefix = "discodeit.storage",
     name = "type",
@@ -47,8 +52,9 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     try {
       Files.createDirectory(root);
     } catch (IOException e) {
-      e.printStackTrace();
-      throw new RuntimeException(e);
+      log.error(e.getMessage(), e);
+      log.debug(e.getMessage(), e.getStackTrace());
+      throw new BinaryIOException(ErrorCode.COMMON_EXCEPTION, Map.of("message", e.getMessage()));
     }
   }
 
@@ -62,7 +68,9 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     ) {
       bs.write(content);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      log.error(e.getMessage(), e);
+      log.debug(e.getMessage(), e.getStackTrace());
+      throw new BinaryIOException(ErrorCode.COMMON_EXCEPTION, Map.of("message", e.getMessage()));
     }
 
     return binaryContentId;
@@ -76,7 +84,9 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
       BufferedInputStream bs = new BufferedInputStream(fos);
       return bs;
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      log.error(e.getMessage(), e);
+      log.debug(e.getMessage(), e.getStackTrace());
+      throw new BinaryIOException(ErrorCode.COMMON_EXCEPTION, Map.of("message", e.getMessage()));
     }
   }
 
@@ -105,7 +115,9 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     try {
       Files.deleteIfExists(path);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      log.error(e.getMessage(), e);
+      log.debug(e.getMessage(), e.getStackTrace());
+      throw new BinaryIOException(ErrorCode.COMMON_EXCEPTION, Map.of("message", e.getMessage()));
     }
   }
 
