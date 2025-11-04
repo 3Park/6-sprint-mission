@@ -32,7 +32,7 @@ public class ChannelRepositoryTest {
   }
 
   @Test
-  @DisplayName("")
+  @DisplayName("findById 성공 테스트")
   public void testFindByIdSuccess() {
     Optional<Channel> result = channelRepository.findById(id);
     assertThat(result.isPresent()).isTrue();
@@ -40,21 +40,21 @@ public class ChannelRepositoryTest {
   }
 
   @Test
-  @DisplayName("")
+  @DisplayName("findById 실패 테스트")
   public void testFindByIdFailure() {
     Optional<Channel> result = channelRepository.findById(UUID.randomUUID());
     assertThat(result.isPresent()).isFalse();
   }
 
   @Test
-  @DisplayName("")
+  @DisplayName("exsistById 성공 테스트")
   public void testExsistByIdSuccess() {
     boolean result = channelRepository.existsById(id);
     assertThat(result).isTrue();
   }
 
   @Test
-  @DisplayName("")
+  @DisplayName("exsistById 실패 테스트")
   public void testExsistByIdFailure() {
     boolean result = channelRepository.existsById(UUID.randomUUID());
     assertThat(result).isFalse();
