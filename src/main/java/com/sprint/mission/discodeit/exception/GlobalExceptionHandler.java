@@ -30,6 +30,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -143,6 +144,13 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<ErrorResponse> handleValidationException(
       ConstraintViolationException ex) {
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.BAD_REQUEST);
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
+  @ExceptionHandler(MissingServletRequestParameterException.class)
+  public ResponseEntity<ErrorResponse> handleValidationException(
+      MissingServletRequestParameterException ex) {
     ErrorResponse error = createErrorResponse(ex, HttpStatus.BAD_REQUEST);
     return ResponseEntity.status(error.getStatus()).body(error);
   }
