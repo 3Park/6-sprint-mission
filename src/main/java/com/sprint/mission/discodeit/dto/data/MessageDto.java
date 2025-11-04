@@ -20,10 +20,10 @@ public class MessageDto extends PageDto {
   private List<MessageAttatchmentDto> attachments;
 
   public void setAttachments(List<MessageAttachment> messageAttachments) {
-    this.attachments = Optional.of(messageAttachments
-            .stream()
-            .map(MessageAttatchmentDto::new).
-            toList())
+    this.attachments = Optional.ofNullable(messageAttachments)
+        .map(list -> list.stream()
+            .map(MessageAttatchmentDto::new)
+            .toList())
         .orElse(null);
   }
 }

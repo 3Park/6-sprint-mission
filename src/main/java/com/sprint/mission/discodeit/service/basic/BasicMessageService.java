@@ -73,22 +73,23 @@ public class BasicMessageService implements MessageService {
         String.format("Creating message with content: %s, channelId : %s, userId : %s", content,
             channelId, user.getId()));
 
-    List<MessageAttachment> attachmentIds = Optional.of(binaryContentCreateRequests.stream()
-        .map(attachmentRequest -> {
-          String fileName = attachmentRequest.fileName();
-          String contentType = attachmentRequest.contentType();
-          byte[] bytes = attachmentRequest.bytes();
+    List<MessageAttachment> attachmentIds = Optional.ofNullable(binaryContentCreateRequests)
+        .map(requests -> requests.stream()
+            .map(attachmentRequest -> {
+              String fileName = attachmentRequest.fileName();
+              String contentType = attachmentRequest.contentType();
+              byte[] bytes = attachmentRequest.bytes();
 
-          BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
-              contentType);
+              BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
+                  contentType);
+              BinaryContent created = binaryContentRepository.save(binaryContent);
+              binaryContentStorage.put(created.getId(), bytes);
 
-          BinaryContent created = binaryContentRepository.save(binaryContent);
-          binaryContentStorage.put(created.getId(), bytes);
-
-          MessageAttachment messageAttachment = new MessageAttachment(message, created);
-          return messageAttachment;
-        })
-        .toList()).orElse(null);
+              return new MessageAttachment(message, created);
+            })
+            .toList()
+        )
+        .orElse(List.of());
 
     message.setAttatchments(attachmentIds);
     Message createdMessage = messageRepository.save(message);
@@ -116,7 +117,7 @@ public class BasicMessageService implements MessageService {
       String pageSortType) {
 
     Sort.Direction direction = Sort.Direction.ASC;
-    if (pageSortType.equals("ASC")) {
+    if (pageSortType.equalsIgnoreCase("desc")) {
       direction = Sort.Direction.DESC;
     }
 
@@ -163,11 +164,11 @@ public class BasicMessageService implements MessageService {
             () -> new MessageNotFoundException(ErrorCode.MESSAGE_NOT_FOUND,
                 Map.of("messageId", messageId)));
 
-    message.getAttachments()
-        .forEach(x -> {
+    Optional.ofNullable(message.getAttachments())
+        .ifPresent(attachments -> attachments.forEach(x -> {
           binaryContentRepository.deleteById(x.getId());
           binaryContentStorage.delete(x.getId());
-        });
+        }));
 
     messageRepository.deleteById(messageId);
   }

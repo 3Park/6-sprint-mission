@@ -18,7 +18,7 @@ import org.springframework.stereotype.Repository;
 public interface MessageRepository extends JpaRepository<Message, UUID> {
 
   @Query("SELECT m FROM Message m JOIN FETCH m.channel WHERE m.channel.id = :channelId")
-  Page<Message> findAllByChannelId(@Param("channelId") UUID channelId, Pageable pageable);
+  Slice<Message> findAllByChannelId(@Param("channelId") UUID channelId, Pageable pageable);
 
   @Query("""
           SELECT m FROM Message m

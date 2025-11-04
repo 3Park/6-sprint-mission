@@ -23,7 +23,7 @@ public class UserDto {
       return;
     }
 
-    this.profile = Optional.of(BinaryContentMapper.INSTANCE.toDto(profile)).orElse(null);
+    this.profile = Optional.ofNullable(BinaryContentMapper.INSTANCE.toDto(profile)).orElse(null);
   }
 
   public void update(Boolean online) {

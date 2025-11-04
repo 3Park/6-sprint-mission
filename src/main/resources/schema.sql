@@ -1,3 +1,5 @@
+CREATE DOMAIN IF NOT EXISTS timestamptz AS TIMESTAMP WITH TIME ZONE;
+
 CREATE TABLE public.binary_contents
 (
     id           uuid         NOT NULL,

@@ -5,17 +5,14 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 public record UserCreateRequest(
-    @NotNull
-    @NotEmpty
+    @NotEmpty(message = "이름은 필수 입니다.")
     String username,
 
-    @NotNull
-    @NotEmpty
-    @Email
+    @NotEmpty(message = "이메일은 필수 입니다.")
+    @Email(message = "올바른 이메일 양식이 아닙니다.")
     String email,
 
-    @NotNull
-    @NotEmpty
+    @NotEmpty(message = "비밀번호는 필수 입니다.")
     String password
 ) {
 

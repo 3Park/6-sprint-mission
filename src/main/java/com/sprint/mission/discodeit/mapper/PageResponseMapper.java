@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.mapper;
 
 import com.sprint.mission.discodeit.dto.data.PageDto;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Slice;
 
@@ -9,18 +10,21 @@ public class PageResponseMapper {
 
   public static <T extends PageDto> PageResponse<T> fromSlice(Slice<T> slice) {
     PageResponse<T> response = new PageResponse<>();
-    response.setContent(slice.getContent());
-    response.setSize(slice.getSize());
-    response.setHasNext(slice.hasNext());
-    response.setTotalElements(null);
 
-    if (slice.hasNext() && slice.getContent().isEmpty() == false) {
-      T lastItem = slice.getContent().get(slice.getContent().size() - 1);
-      response.setNextCursor(lastItem.getCreatedAt()); // last item's cursor
-    } else {
-      response.setNextCursor(null);
-    }
+    Optional.ofNullable(slice).ifPresent(x -> {
+      response.setContent(x.getContent());
+      response.setSize(x.getSize());
+      response.setHasNext(x.hasNext());
+      response.setTotalElements(null);
 
+      if (x.hasNext() && x.getContent().isEmpty() == false) {
+        T lastItem = x.getContent().get(x.getContent().size() - 1);
+        response.setNextCursor(lastItem.getCreatedAt()); // last item's cursor
+      } else {
+        response.setNextCursor(null);
+      }
+    });
+    
     return response;
   }
 

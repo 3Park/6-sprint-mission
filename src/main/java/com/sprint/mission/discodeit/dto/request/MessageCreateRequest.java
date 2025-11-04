@@ -6,16 +6,13 @@ import java.util.UUID;
 
 public record MessageCreateRequest(
 
-    @NotNull
-    @NotEmpty
+    @NotEmpty(message = "내용은 필수 입니다.")
     String content,
 
-    @NotNull
-    @NotEmpty
+    @NotEmpty(message = "채널 아이디는 필수 입니다.")
     UUID channelId,
 
-    @NotNull
-    @NotEmpty
+    @NotEmpty(message = "유저 아이디는 필수 입니다.")
     UUID authorId
 ) {
 
