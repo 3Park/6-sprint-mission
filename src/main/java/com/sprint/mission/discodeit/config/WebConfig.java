@@ -1,6 +1,5 @@
-package com.sprint.mission.discodeit.coonfig;
+package com.sprint.mission.discodeit.config;
 
-import com.sprint.mission.discodeit.log.ControllerLogInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -10,7 +9,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
   @Autowired
-  private ControllerLogInterceptor controllerLogInterceptor;
+  private MDCLoggingInterceptor controllerLogInterceptor;
 
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
