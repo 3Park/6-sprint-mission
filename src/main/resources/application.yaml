@@ -25,6 +25,11 @@ spring:
       mode: never   # schema.sql, data.sql 실행 여부 (never, embedded, always)
   #  defer-datasource-initialization: true
   #  ↑ JPA가 스키마 생성 후 data.sql 실행하도록 보장 (Spring Boot 2.5+)
+  boot:
+    admin:
+      client:
+        instance:
+          name: discodeit
 
 
 discodeit:
