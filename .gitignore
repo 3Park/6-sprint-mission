@@ -13,6 +13,7 @@
 .gradle/**
 .discodeit
 .logs/**
+.env
 build/*
 
 # AWS User-specific
