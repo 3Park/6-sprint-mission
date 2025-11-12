@@ -15,6 +15,7 @@
 .logs/**
 .env
 build/*
+initdb/*
 
 # AWS User-specific
 .idea/**/aws.xml
