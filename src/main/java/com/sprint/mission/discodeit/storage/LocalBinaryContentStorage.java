@@ -79,9 +79,8 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
   @Override
   public InputStream get(UUID binaryContentId) {
     Path path = resolvePath(binaryContentId);
-    try {
-      FileInputStream fos = new FileInputStream(path.toFile());
-      BufferedInputStream bs = new BufferedInputStream(fos);
+    try (FileInputStream fos = new FileInputStream(path.toFile());
+        BufferedInputStream bs = new BufferedInputStream(fos);) {
       return bs;
     } catch (IOException e) {
       log.error(e.getMessage(), e);
