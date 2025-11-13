@@ -116,84 +116,8 @@ public class MessageServiceTest {
     User user = new User("name", "username", "password", null);
     Message message = new Message("content", channel, user);
 
-    Slice<Message> returnVal = new Slice<Message>() {
-      @Override
-      public int getNumber() {
-        return 1;
-      }
-
-      @Override
-      public int getSize() {
-        return 1;
-      }
-
-      @Override
-      public int getNumberOfElements() {
-        return 1;
-      }
-
-      @Override
-      public List<Message> getContent() {
-        return List.of(message);
-      }
-
-      @Override
-      public boolean hasContent() {
-        return true;
-      }
-
-      @Override
-      public Sort getSort() {
-        return Sort.by(Sort.Direction.DESC, "createdAt");
-      }
-
-      @Override
-      public boolean isFirst() {
-        return true;
-      }
-
-      @Override
-      public boolean isLast() {
-        return true;
-      }
-
-      @Override
-      public boolean hasNext() {
-        return false;
-      }
-
-      @Override
-      public boolean hasPrevious() {
-        return false;
-      }
-
-      @Override
-      public Pageable nextPageable() {
-        return null;
-      }
-
-      @Override
-      public Pageable previousPageable() {
-        return null;
-      }
-
-      @Override
-      public <U> Slice<U> map(Function<? super Message, ? extends U> converter) {
-        U converted = converter.apply(message);
-        return new SliceImpl<>(
-            List.of(converted),
-            this.getPageable(),
-            false // 다음 페이지 없음
-        );
-      }
-
-      @Override
-      public Iterator<Message> iterator() {
-        return (Iterator<Message>) message;
-      }
-    };
-
     Pageable pageable = PageRequest.of(0, 50, Sort.by(Sort.Direction.DESC, "createdAt"));
+    Slice<Message> returnVal = new SliceImpl<>(List.of(message), pageable, false);
     given(messageRepository.findAllByChannelId(channelId, pageable)).willReturn(returnVal);
 
     PageResponse<MessageDto> dto = messageService.findAllByChannelId(channelId, null, "desc");
