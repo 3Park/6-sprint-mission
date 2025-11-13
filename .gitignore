@@ -14,7 +14,7 @@
 .discodeit
 .logs/**
 .env
-.env_local
+.env.local
 discodeit.env
 build/*
 initdb/*
