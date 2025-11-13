@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.storage;
 
 import com.sprint.mission.discodeit.dto.data.BinaryContentDto;
+import com.sprint.mission.discodeit.exception.custom.binary.BinaryBadContentTypeException;
 import com.sprint.mission.discodeit.exception.custom.binary.BinaryIOException;
 import com.sprint.mission.discodeit.exception.errorcode.ErrorCode;
 import java.io.BufferedInputStream;
@@ -59,9 +60,9 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
   }
 
   @Override
-  public UUID put(UUID binaryContentId, byte[] content) {
+  public UUID put(UUID binaryContentId, byte[] content, String contentType) {
+    Path path = resolvePath(binaryContentId, contentType);
 
-    Path path = resolvePath(binaryContentId);
     try (
         FileOutputStream fos = new FileOutputStream(path.toFile());
         BufferedOutputStream bs = new BufferedOutputStream(fos);
@@ -77,8 +78,8 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
   }
 
   @Override
-  public InputStream get(UUID binaryContentId) {
-    Path path = resolvePath(binaryContentId);
+  public InputStream get(UUID binaryContentId, String contentType) {
+    Path path = resolvePath(binaryContentId, contentType);
     try (FileInputStream fos = new FileInputStream(path.toFile());
         BufferedInputStream bs = new BufferedInputStream(fos);) {
       return bs;
@@ -96,7 +97,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
       return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
-    InputStream stream = get(dto.getId());
+    InputStream stream = get(dto.getId(), dto.getContentType());
     if (stream == null) {
       return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
@@ -109,10 +110,11 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
   }
 
   @Override
-  public void delete(UUID binaryContentId) {
-    Path path = resolvePath(binaryContentId);
+  public boolean delete(UUID binaryContentId, String contentType) {
+    Path path = resolvePath(binaryContentId, contentType);
     try {
       Files.deleteIfExists(path);
+      return true;
     } catch (IOException e) {
       log.error(e.getMessage(), e);
       log.debug(e.getMessage(), e.getStackTrace());
@@ -122,5 +124,21 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
 
   private Path resolvePath(UUID binaryContentId) {
     return root.resolve(binaryContentId.toString());
+  }
+
+  private Path resolvePath(UUID binaryContentId, String contentType) {
+    if (contentType.isEmpty() || contentType.isBlank()) {
+      throw new BinaryBadContentTypeException(ErrorCode.COMMON_EXCEPTION,
+          Map.of("message", "Content type is empty"));
+    }
+
+    String[] extension = contentType.split("/");
+    if (extension.length != 2) {
+      throw new BinaryBadContentTypeException(ErrorCode.COMMON_EXCEPTION,
+          Map.of("message", "Bad content type", "ContentType", contentType));
+    }
+
+    Path path = resolvePath(binaryContentId);
+    return path.resolve("." + extension[1]);
   }
 }

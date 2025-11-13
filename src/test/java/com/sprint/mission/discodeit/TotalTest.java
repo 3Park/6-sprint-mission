@@ -63,21 +63,21 @@ public class TotalTest {
   private AWSS3Test awss3Test;
 
   @Test
-  @DisplayName("AWS 업로드 테스트")
+  @DisplayName("AWS S3 업로드 테스트")
   void awsUploadTest() {
     boolean result = awss3Test.upload();
     assertThat(result).isTrue();
   }
 
   @Test
-  @DisplayName("AWS 다운로드 테스트")
+  @DisplayName("AWS S3 다운로드 테스트")
   void awsDownloadTest() {
     byte[] result = awss3Test.download();
     assertThat(result).isNotNull();
   }
 
   @Test
-  @DisplayName("AWS PresignedUrl 테스트")
+  @DisplayName("AWS S3 PresignedUrl 테스트")
   void awsPresignedUrlTest() {
     String url = awss3Test.createPresignedUrl();
     assertThat(url).isNotNull();

@@ -35,3 +35,10 @@ spring:
     level:
       org.springframework.jdbc.datasource.init.ScriptUtils: DEBUG
       org.springframework.boot.sql.init: DEBUG
+
+
+discodeit:
+  storage:
+    type: ${STORAGE_TYPE:s3}
+    local:
+      root-path: ${STORAGE_LOCAL_ROOT_PATH:.discodeit/storage}

@@ -9,11 +9,11 @@ import org.springframework.stereotype.Component;
 
 public interface BinaryContentStorage {
 
-  UUID put(UUID binaryContentId, byte[] content);
+  UUID put(UUID binaryContentId, byte[] content, String contentType);
 
-  InputStream get(UUID binaryContentId);
+  InputStream get(UUID binaryContentId, String contentType);
 
   ResponseEntity<?> download(BinaryContentDto dto);
 
-  void delete(UUID binaryContentId);
+  boolean delete(UUID binaryContentId, String contentType);
 }

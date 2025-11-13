@@ -1,7 +1,11 @@
 package com.sprint.mission.discodeit.exception;
 
 import com.sprint.mission.discodeit.exception.custom.base.DiscodeitException;
+import com.sprint.mission.discodeit.exception.custom.binary.BinaryBadContentTypeException;
+import com.sprint.mission.discodeit.exception.custom.binary.BinaryS3Exception;
+import com.sprint.mission.discodeit.exception.custom.binary.EmptyBinaryRequestException;
 import com.sprint.mission.discodeit.exception.custom.binary.EmptyIdsException;
+import com.sprint.mission.discodeit.exception.custom.binary.BinaryNotFoundException;
 import com.sprint.mission.discodeit.exception.custom.channel.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.custom.channel.PrivateChannelUpdateException;
 import com.sprint.mission.discodeit.exception.custom.common.NoPathVariableException;
@@ -125,6 +129,34 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleUserInputDataException(
       UserStatusAlreadyExsistException ex) {
     ErrorResponse error = createErrorResponse(ex, HttpStatus.CONFLICT);
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
+  @ExceptionHandler(BinaryNotFoundException.class)
+  public ResponseEntity<ErrorResponse> handleUserInputDataException(
+      BinaryNotFoundException ex) {
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.NOT_FOUND);
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
+  @ExceptionHandler(EmptyBinaryRequestException.class)
+  public ResponseEntity<ErrorResponse> handleUserInputDataException(
+      EmptyBinaryRequestException ex) {
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.BAD_REQUEST);
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
+  @ExceptionHandler(BinaryBadContentTypeException.class)
+  public ResponseEntity<ErrorResponse> handleUserInputDataException(
+      BinaryBadContentTypeException ex) {
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.BAD_REQUEST);
+    return ResponseEntity.status(error.getStatus()).body(error);
+  }
+
+  @ExceptionHandler(BinaryS3Exception.class)
+  public ResponseEntity<ErrorResponse> handleUserInputDataException(
+      BinaryS3Exception ex) {
+    ErrorResponse error = createErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR);
     return ResponseEntity.status(error.getStatus()).body(error);
   }
 
