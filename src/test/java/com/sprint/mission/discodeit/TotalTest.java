@@ -14,6 +14,8 @@ import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.service.ChannelService;
 import com.sprint.mission.discodeit.service.MessageService;
 import com.sprint.mission.discodeit.service.UserService;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import com.sprint.mission.discodeit.storage.s3.AWSS3Test;
 import jakarta.transaction.Transactional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -56,6 +58,30 @@ public class TotalTest {
 
   @Autowired
   private TestRestTemplate restTemplate;
+
+  @Autowired
+  private AWSS3Test awss3Test;
+
+  @Test
+  @DisplayName("AWS S3 업로드 테스트")
+  void awsUploadTest() {
+    boolean result = awss3Test.upload();
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  @DisplayName("AWS S3 다운로드 테스트")
+  void awsDownloadTest() {
+    byte[] result = awss3Test.download();
+    assertThat(result).isNotNull();
+  }
+
+  @Test
+  @DisplayName("AWS S3 PresignedUrl 테스트")
+  void awsPresignedUrlTest() {
+    String url = awss3Test.createPresignedUrl();
+    assertThat(url).isNotNull();
+  }
 
   @Test
   @DisplayName("사용자 생성 테스트")

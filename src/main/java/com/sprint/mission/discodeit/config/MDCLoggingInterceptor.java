@@ -20,18 +20,18 @@ public class MDCLoggingInterceptor implements HandlerInterceptor {
     try {
       UUID uuid = UUID.randomUUID();
       MDC.put("requestId", uuid.toString());
-      MDC.put("requestMethod", request.getRequestURL().toString());
-      MDC.put("requestUrl", request.getMethod());
+      MDC.put("requestUrl", request.getRequestURL().toString());
+      MDC.put("requestMethod", request.getMethod());
 
       log.info("requested.");
 
       response.addHeader("Discodeit-Request-ID", uuid.toString());
 
       return HandlerInterceptor.super.preHandle(request, response, handler);
-    } finally {
+    } catch (Exception e) {
       MDC.clear();
+      return false;
     }
-
   }
 
   @Override
@@ -44,5 +44,7 @@ public class MDCLoggingInterceptor implements HandlerInterceptor {
   public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
       Object handler, Exception ex) throws Exception {
     HandlerInterceptor.super.afterCompletion(request, response, handler, ex);
+
+    MDC.clear();
   }
 }

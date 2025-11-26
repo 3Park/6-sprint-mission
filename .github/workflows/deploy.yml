@@ -1,0 +1,72 @@
+name: deploy.yml
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - release
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        #github 에 있는 모듈 사용. 체크아웃을 맨 처음에 넣어주는게 좋다.
+        uses: actions/checkout@v5
+
+      - name: build docker
+        run: docker build -t discodeit:latest .
+
+      - name: change tag
+        run: |
+          echo "ECR_REG=${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.${{secrets.AWS_REGION}}.amazonaws.com/" >> $GITHUB_ENV
+          echo "ECR_REPO=${{secrets.AWS_REPO_NAME}}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=${GITHUB_SHA::8}" >> $GITHUB_ENV
+
+      - name: change tag from env
+        run: |
+          docker tag discodeit:latest ${{env.ECR_REG}}${{env.ECR_REPO}}:${{env.IMAGE_TAG}}
+          docker tag discodeit:latest ${{env.ECR_REG}}${{env.ECR_REPO}}:latest
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5.1.0
+        with:
+          aws-access-key-id: ${{ secrets.AWS_DEPLOY_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_DEPLOY_SECRET_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: docker login
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: push
+        run: |
+          docker push ${{env.ECR_REG}}${{env.ECR_REPO}}:${{env.IMAGE_TAG}}
+          docker push ${{env.ECR_REG}}${{env.ECR_REPO}}:latest
+
+
+      - name: Prework for ECS - task definition download
+        run: |
+          aws ecs describe-task-definition --task-definition ${{secrets.AWS_TASK_DEFINITION }} --query taskDefinition > task-definition.json
+
+      - name: change definition
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{secrets.AWS_CONTAINER_NAME}}
+          image: ${{env.ECR_REG}}${{env.ECR_REPO}}:${{env.IMAGE_TAG}}
+
+      - name: deploy changed task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{steps.render-task-def.outputs.task-definition}}
+          service: ${{secrets.AWS_SERVICE_NAME}}
+          cluster: ${{secrets.AWS_CLUSTER_NAME}}
+          wait-for-service-stability: true
+
+      - name: verify
+        run: |
+          echo "Verifying deployment"
+          aws ecs describe-services --cluster ${{secrets.AWS_CLUSTER_NAME}} --services ${{secrets.AWS_SERVICE_NAME}}
+          
+      
+

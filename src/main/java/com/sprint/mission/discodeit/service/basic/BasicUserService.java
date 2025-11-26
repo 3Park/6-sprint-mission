@@ -62,7 +62,7 @@ public class BasicUserService implements UserService {
               contentType);
 
           BinaryContent created = binaryContentRepository.save(binaryContent);
-          binaryContentStorage.put(created.getId(), bytes);
+          binaryContentStorage.put(created.getId(), bytes, contentType);
           return created;
         })
         .orElse(null);
@@ -131,7 +131,7 @@ public class BasicUserService implements UserService {
           Optional.ofNullable(user.getProfile())
               .ifPresent(x -> {
                 binaryContentRepository.deleteById(x.getId());
-                binaryContentStorage.delete(x.getId());
+                binaryContentStorage.delete(x.getId(), x.getContentType());
               });
 
           String fileName = profileRequest.fileName();
@@ -141,7 +141,7 @@ public class BasicUserService implements UserService {
               contentType);
 
           BinaryContent created = binaryContentRepository.save(binaryContent);
-          binaryContentStorage.put(created.getId(), bytes);
+          binaryContentStorage.put(created.getId(), bytes, contentType);
           return created;
         })
         .orElse(null);
@@ -164,7 +164,7 @@ public class BasicUserService implements UserService {
         .ifPresent(x ->
         {
           binaryContentRepository.deleteById(x.getId());
-          binaryContentStorage.delete(x.getId());
+          binaryContentStorage.delete(x.getId(), x.getContentType());
         });
     userStatusRepository.deleteByUserId(userId);
 

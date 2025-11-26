@@ -20,7 +20,9 @@ public enum ErrorCode {
   CHANNEL_NOT_FOUND("없는 채널 입니다."),
   MESSAGE_NOT_FOUND("없는 메세지 입니다."),
   PRIVATE_CHANNEL_UPDATE("개인채널이 업데이트 되었습니다"),
-  COMMON_EXCEPTION("오류가 발생 하였습니다.");
+  COMMON_EXCEPTION("오류가 발생 하였습니다."),
+  AWS_EXCEPTION("AWS 작업 도중 오류가 발생했습니다."),
+  EMPTY_BINARY_REQUEST_EXCEPTION("저장할 바이너리 데이터가 없습니다.");
 
   private String message;
 

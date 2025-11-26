@@ -83,7 +83,7 @@ public class BasicMessageService implements MessageService {
               BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
                   contentType);
               BinaryContent created = binaryContentRepository.save(binaryContent);
-              binaryContentStorage.put(created.getId(), bytes);
+              binaryContentStorage.put(created.getId(), bytes, contentType);
 
               return new MessageAttachment(message, created);
             })
@@ -167,7 +167,7 @@ public class BasicMessageService implements MessageService {
     Optional.ofNullable(message.getAttachments())
         .ifPresent(attachments -> attachments.forEach(x -> {
           binaryContentRepository.deleteById(x.getId());
-          binaryContentStorage.delete(x.getId());
+          binaryContentStorage.delete(x.getId(), x.getAttatchment().getContentType());
         }));
 
     messageRepository.deleteById(messageId);

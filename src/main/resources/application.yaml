@@ -1,5 +1,5 @@
 app:
-  version:1.7.0
+  version:1.2-M8
 
 spring:
   application:
@@ -8,35 +8,12 @@ spring:
     multipart:
       maxFileSize: 10MB # 파일 하나의 최대 크기
       maxRequestSize: 30MB  # 한 번에 최대 업로드 가능 용량
-      # 운영 환경에서는 validate 또는 none 권장
-      # 실행되는 SQL 출력. product 에서는 false
-    properties:
-      hibernate:
-        format_sql: true   # SQL 보기 좋게 정렬
-        highlight_sql: true # (Hibernate 5.5+) ANSI 색상 강조
-        use_sql_comments: true # JPQL -> SQL 변환 시 주석 추가
-        # 사용할 데이터베이스 방언(Dialect) 지정
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    open-in-view: false   # OSIV 비활성화 (서비스 계층에서만 영속성 사용)
-
-  sql:
-    init:
-      mode: never   # schema.sql, data.sql 실행 여부 (never, embedded, always)
-  #  defer-datasource-initialization: true
-  #  ↑ JPA가 스키마 생성 후 data.sql 실행하도록 보장 (Spring Boot 2.5+)
-  boot:
-    admin:
-      client:
-        instance:
-          name: discodeit
-
 
 discodeit:
   storage:
-    type: local
+    type: ${STORAGE_TYPE:local}
     local:
-      root-path: .discodeit
+      root-path: ${STORAGE_LOCAL_ROOT_PATH:.discodeit/storage}
 
 logging:
   level:
@@ -51,3 +28,15 @@ management:
   endpoint:
     health:
       show-details: always
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY}
+      secret-key: ${SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY}
+    region:
+      # 환경 변수가 없다면 ap-northeast-2를 기본값으로 사용
+      static: ${SPRING_CLOUD_AWS_REGION_STATIC:ap-northeast-2}
+    s3:
+      presigned-url-expiration: ${AWS_S3_PRESIGNED_URL_EXPIRATION:10}
+      bucket: ${CLOUD_AWS_S3_BUCKET:discodeit-binary-content-storage-pjg}

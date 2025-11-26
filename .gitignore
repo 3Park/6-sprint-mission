@@ -13,7 +13,11 @@
 .gradle/**
 .discodeit
 .logs/**
+.env
+.env.local
+discodeit.env
 build/*
+initdb/*
 
 # AWS User-specific
 .idea/**/aws.xml
