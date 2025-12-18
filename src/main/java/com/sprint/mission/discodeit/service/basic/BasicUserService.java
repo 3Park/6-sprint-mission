@@ -3,8 +3,10 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.dto.request.BinaryContentCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
+import com.sprint.mission.discodeit.dto.request.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.entity.BinaryContent;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.user.UserAlreadyExistsException;
@@ -20,6 +22,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +38,7 @@ public class BasicUserService implements UserService {
   private final UserMapper userMapper;
   private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentStorage binaryContentStorage;
+  private final PasswordEncoder passwordEncoder;
 
   @Transactional
   @Override
@@ -63,12 +68,12 @@ public class BasicUserService implements UserService {
           return binaryContent;
         })
         .orElse(null);
-    String password = userCreateRequest.password();
+    String password = passwordEncoder.encode(userCreateRequest.password());
 
     User user = new User(username, email, password, nullableProfile);
     Instant now = Instant.now();
     UserStatus userStatus = new UserStatus(user, now);
-
+    user.updateRole(Role.USER);
     userRepository.save(user);
     log.info("사용자 생성 완료: id={}, username={}", user.getId(), username);
     return userMapper.toDto(user);
@@ -99,6 +104,7 @@ public class BasicUserService implements UserService {
 
   @Transactional
   @Override
+  @PreAuthorize("#userId == @UserCheck.getUserId(authentication)")
   public UserDto update(UUID userId, UserUpdateRequest userUpdateRequest,
       Optional<BinaryContentCreateRequest> optionalProfileCreateRequest) {
     log.debug("사용자 수정 시작: id={}, request={}", userId, userUpdateRequest);
@@ -143,6 +149,7 @@ public class BasicUserService implements UserService {
 
   @Transactional
   @Override
+  @PreAuthorize("#userId == @UserCheck.getUserId(authentication)")
   public void delete(UUID userId) {
     log.debug("사용자 삭제 시작: id={}", userId);
 
@@ -152,5 +159,21 @@ public class BasicUserService implements UserService {
 
     userRepository.deleteById(userId);
     log.info("사용자 삭제 완료: id={}", userId);
+  }
+
+  @Override
+  @PreAuthorize("hasRole('ADMIN')")
+  public UserDto updateUserRole(UserRoleUpdateRequest request) {
+    if (request == null) {
+      throw new IllegalArgumentException();
+    }
+
+    User user = userRepository.findById(request.userId())
+        .orElseThrow(() -> UserNotFoundException.withId(request.userId()));
+    log.info("사용자 role 변경. {} -> {}", user.getRole(), request.newRole());
+
+    user.updateRole(request.newRole());
+    userRepository.save(user);
+    return userMapper.toDto(user);
   }
 }
