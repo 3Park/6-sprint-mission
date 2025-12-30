@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.text.ParseException;
 import java.util.Date;
@@ -66,6 +67,10 @@ public class JwtTokenProvider {
     public boolean validateToken(String token) {
 
         try {
+            if (StringUtils.isEmpty(token)) {
+                return false;
+            }
+
             SignedJWT signedJWT = SignedJWT.parse(token);
             if (signedJWT.verify(jwsVerifier) == false)
                 return false;
@@ -83,19 +88,6 @@ public class JwtTokenProvider {
             return false;
         }
     }
-
-//    public String refreshToken(String refreshToken) {
-//        try
-//        {
-//            JWTClaimsSet set = parseToken(refreshToken);
-//            if (set == null)
-//                throw new IllegalTokenException();
-//
-//            return generateAccessToken(set.getSubject(), set.getClaimAsString("role"));
-//        } catch (ParseException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
 
     private String generateToken(String userName, String role, Long expiration) {
         try {

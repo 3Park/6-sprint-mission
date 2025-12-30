@@ -64,6 +64,6 @@ logging:
 
 jwt:
   secret: ${JWT_SECRET_KEY}
-  access_key_expiration: 300000
+  access_key_expiration: 1800000
   refresh_key_expiration: 1209600000
   issuer: "discodeit-server"

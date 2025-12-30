@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.dto.data.JwtInformation;
 import com.sprint.mission.discodeit.dto.data.UserDto;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.token.IllegalTokenException;
+import com.sprint.mission.discodeit.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.jwt.JwtTokenProvider;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
@@ -24,6 +25,7 @@ public class BasicAuthService implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final JwtRegistry jwtRegistry;
 
     @Override
     public JwtInformation refreshToken(String refreshToken) {
@@ -48,10 +50,14 @@ public class BasicAuthService implements AuthService {
                     .accessToken(newAccessToken)
                     .build();
 
-            return JwtInformation.builder()
+            JwtInformation newInfo = JwtInformation.builder()
                     .dto(jwtDto)
                     .refreshToken(newRefreshToken)
+                    .accessToken(newAccessToken)
                     .build();
+
+            jwtRegistry.rotateJwtInformation(refreshToken, newInfo);
+            return newInfo;
 
         } catch (ParseException e) {
             throw new RuntimeException(e);

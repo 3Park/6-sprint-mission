@@ -9,10 +9,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class TokenUtils {
 
+    public static final String REFRESH_TOKEN = "REFRESH_TOKEN";
     private final JwtProperties jwtProperties;
 
     public Cookie getRefreshCookie(String refreshToken) {
-        Cookie cookie = new Cookie("REFRESH_TOKEN", refreshToken);
+        Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
         cookie.setPath("/");
         cookie.setMaxAge(Math.toIntExact(jwtProperties.getRefreshKeyExpiration()));
         cookie.setHttpOnly(true);
@@ -20,7 +21,7 @@ public class TokenUtils {
     }
 
     public Cookie emptyRefreshCookie() {
-        Cookie cookie = new Cookie("REFRESH_TOKEN", null);
+        Cookie cookie = new Cookie(REFRESH_TOKEN, null);
         cookie.setPath("/");
         cookie.setMaxAge(0);
         cookie.setHttpOnly(true);

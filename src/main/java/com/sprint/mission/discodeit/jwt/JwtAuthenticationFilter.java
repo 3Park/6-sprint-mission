@@ -21,19 +21,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final DiscodeitUserDetailsService userDetailsService;
+    private final JwtRegistry jwtRegistry;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String token = getTokenFromRequest(request);
-
-        if (token == null) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         JWTClaimsSet claimsSet = jwtTokenProvider.parseToken(token);
-        if (claimsSet == null) {
+
+        if (token == null || claimsSet == null
+                || jwtRegistry.hasActiveJwtInformationByAccessToken(token) == false) {
             filterChain.doFilter(request, response);
             return;
         }

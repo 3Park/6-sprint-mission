@@ -42,7 +42,7 @@ public class AuthController implements AuthApi {
     @Override
     public ResponseEntity<JwtDto> refreshToken(@CookieValue(value = "REFRESH_TOKEN") String refreshToken, HttpServletResponse response) {
         JwtInformation information = authService.refreshToken(refreshToken);
-        response.addCookie(tokenUtils.getRefreshCookie(information.refreshToken()));
-        return ResponseEntity.status(HttpStatus.OK).body(information.dto());
+        response.addCookie(tokenUtils.getRefreshCookie(information.getRefreshToken()));
+        return ResponseEntity.status(HttpStatus.OK).body(information.getDto());
     }
 }
