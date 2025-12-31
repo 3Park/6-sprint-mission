@@ -1,27 +1,27 @@
+server:
+  port: 8080
+
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-
+    url: jdbc:postgresql://localhost:5432/discodeit
+    username: discodeit_user
+    password: discodeit1234
   jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: true
     properties:
       hibernate:
-        format_sql: true   # SQL 보기 좋게 정렬
-        highlight_sql: true # (Hibernate 5.5+) ANSI 색상 강조
-        use_sql_comments: true # JPQL -> SQL 변환 시 주석 추가
-        # 사용할 데이터베이스 방언(Dialect) 지정
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-      database-platform: org.hibernate.dialect.PostgreSQLDialect
-      open-in-view: false   # OSIV 비활성화 (서비스 계층에서만 영속성 사용)
+        format_sql: true
 
-    sql:
-      init:
-        mode: never   # schema.sql, data.sql 실행 여부 (never, embedded, always)
-    #  defer-datasource-initialization: true
-    #  ↑ JPA가 스키마 생성 후 data.sql 실행하도록 보장 (Spring Boot 2.5+)
+logging:
+  level:
+    com.sprint.mission.discodeit: debug
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
+    org.springframework.security: trace
 
+management:
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true

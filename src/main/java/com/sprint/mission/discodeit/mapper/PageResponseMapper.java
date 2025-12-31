@@ -1,40 +1,30 @@
 package com.sprint.mission.discodeit.mapper;
 
-import com.sprint.mission.discodeit.dto.data.PageDto;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
-import java.util.Optional;
+import org.mapstruct.Mapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Slice;
 
-public class PageResponseMapper {
+@Mapper(componentModel = "spring")
+public interface PageResponseMapper {
 
-  public static <T extends PageDto> PageResponse<T> fromSlice(Slice<T> slice) {
-    PageResponse<T> response = new PageResponse<>();
-
-    Optional.ofNullable(slice).ifPresent(x -> {
-      response.setContent(x.getContent());
-      response.setSize(x.getSize());
-      response.setHasNext(x.hasNext());
-      response.setTotalElements(null);
-
-      if (x.hasNext() && x.getContent().isEmpty() == false) {
-        T lastItem = x.getContent().get(x.getContent().size() - 1);
-        response.setNextCursor(lastItem.getCreatedAt()); // last item's cursor
-      } else {
-        response.setNextCursor(null);
-      }
-    });
-    
-    return response;
+  default <T> PageResponse<T> fromSlice(Slice<T> slice, Object nextCursor) {
+    return new PageResponse<>(
+        slice.getContent(),
+        nextCursor,
+        slice.getSize(),
+        slice.hasNext(),
+        null
+    );
   }
 
-  public static <T> PageResponse<T> fromPage(Page<T> page) {
-    PageResponse<T> response = new PageResponse<>();
-    response.setContent(page.getContent());
-    response.setNextCursor(page.getNumber());
-    response.setSize(page.getSize());
-    response.setHasNext(page.hasNext());
-    response.setTotalElements(page.getTotalElements());
-    return response;
+  default <T> PageResponse<T> fromPage(Page<T> page, Object nextCursor) {
+    return new PageResponse<>(
+        page.getContent(),
+        nextCursor,
+        page.getSize(),
+        page.hasNext(),
+        page.getTotalElements()
+    );
   }
 }
