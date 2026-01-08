@@ -8,7 +8,10 @@ import com.sprint.mission.discodeit.exception.notification.NotificationException
 import com.sprint.mission.discodeit.mapper.NotificationMapper;
 import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.service.NotificationService;
+import com.sprint.mission.discodeit.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,11 +26,16 @@ import java.util.UUID;
 public class BasicNotificationService implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final NotificationMapper notificationMapper;
+    private final SecurityContextUtils securityContextUtils;
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(
+            value = "notifications",
+            key = "@SecurityContext.getUserId()"
+    )
     public List<NotificationDto> findByReceiverId() {
-        return notificationRepository.findByReceiverId(getUserId()).orElse(List.of())
+        return notificationRepository.findByReceiverId(securityContextUtils.getUserId()).orElse(List.of())
                 .stream()
                 .map(notificationMapper::toDto)
                 .toList();
@@ -35,37 +43,39 @@ public class BasicNotificationService implements NotificationService {
 
     @Transactional
     @Override
+    @CacheEvict(
+            value = "notifications",
+            allEntries = true
+    )
     public void saveAllNotifications(List<Notification> notifications) {
         notificationRepository.saveAll(notifications);
     }
 
     @Transactional
     @Override
+    @CacheEvict(
+            value = "notifications",
+            key = "#notification.receiverId"
+    )
     public void saveNotification(Notification notification) {
         notificationRepository.save(notification);
     }
 
     @Override
     @Transactional
+    @CacheEvict(
+            value = "notifications",
+            allEntries = true
+    )
     public void deleteById(UUID id) {
         Notification notification = notificationRepository.findById(id).orElseThrow(
                 () -> new NotificationException(ErrorCode.NOTIFICATION_NOT_FOUND)
         );
 
-        if (getUserId() != notification.getReceiverId()) {
+        if (securityContextUtils.getUserId() != notification.getReceiverId()) {
             throw new NotificationException(ErrorCode.INVALID_USER_AUTHORIZATION);
         }
 
         notificationRepository.delete(notification);
-    }
-
-    private UUID getUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null
-                || authentication.getDetails() instanceof DiscodeitUserDetails)
-            throw new NotificationException(ErrorCode.INVALID_USER_CREDENTIALS);
-
-        DiscodeitUserDetails userDetails = (DiscodeitUserDetails) authentication.getDetails();
-        return userDetails.getUserId();
     }
 }
