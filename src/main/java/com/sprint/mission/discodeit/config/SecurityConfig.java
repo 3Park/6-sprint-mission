@@ -2,11 +2,8 @@ package com.sprint.mission.discodeit.config;
 
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.handler.CustomAccessDeniedHandler;
-import com.sprint.mission.discodeit.handler.HttpStatusReturningLogoutSuccessHandler;
-import com.sprint.mission.discodeit.handler.LoginFailureHandler;
-import com.sprint.mission.discodeit.handler.LoginSuccessHandler;
-import com.sprint.mission.discodeit.handler.SpaCsrfTokenRequestHandler;
+import com.sprint.mission.discodeit.handler.*;
+import com.sprint.mission.discodeit.jwt.JwtAuthenticationFilter;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -25,12 +22,14 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
@@ -40,117 +39,114 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-  private final LoginFailureHandler loginFailureHandler;
-  private final LoginSuccessHandler loginSuccessHandler;
-  private final SpaCsrfTokenRequestHandler spaCsrfTokenRequestHandler;
-  private final HttpStatusReturningLogoutSuccessHandler httpStatusReturningLogoutSuccessHandler;
-  private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final LoginFailureHandler loginFailureHandler;
+    private final HttpStatusReturningLogoutSuccessHandler httpStatusReturningLogoutSuccessHandler;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final JwtLoginSuccessHandler jwtLoginSuccessHandler;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtLogoutHandler jwtLogoutHandler;
+    private final SpaCsrfTokenRequestHandler spaCsrfTokenRequestHandler;
 
-  @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http.csrf(csrf -> csrf
-            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-            .csrfTokenRequestHandler(spaCsrfTokenRequestHandler))
-        .authorizeHttpRequests(authorizeRequests ->
-            authorizeRequests
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(spaCsrfTokenRequestHandler))
+                .authorizeHttpRequests(authorizeRequests ->
+                        authorizeRequests
+                                .requestMatchers(
+                                        "/index.html",
+                                        "/assets/**",
+                                        "favicon.ico",
+                                        "/api/auth/login",
+                                        "/api/auth/csrf-token",
+                                        "/api/auth/logout",
+                                        "/actuator/health",
+                                        "/actuator/info",
+                                        "/api/auth/refresh").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                                .requestMatchers("/actuator/**").hasRole("ADMIN")
+                                .anyRequest().authenticated()
+                ).formLogin(x -> x
+                        .loginProcessingUrl("/api/auth/login")
+                        .successHandler(jwtLoginSuccessHandler)
+                        .failureHandler(loginFailureHandler)
+                        .permitAll()
+                ).logout(x -> x
+                        .logoutUrl("/api/auth/logout")
+                        .addLogoutHandler(jwtLogoutHandler)
+                        .logoutSuccessHandler(httpStatusReturningLogoutSuccessHandler)
+                        .permitAll()
+                ).exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.FORBIDDEN))
+                        .accessDeniedHandler(customAccessDeniedHandler))
+                .sessionManagement(management -> management
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring()
                 .requestMatchers(
-                    "/index.html",
-                    "/assets/**",
-                    "favicon.ico",
-                    "/api/auth/login",
-                    "/api/auth/csrf-token",
-                    "/api/auth/logout",
-                    "/actuator/health",
-                    "/actuator/info").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                .requestMatchers("/actuator/**").hasRole("ADMIN")
-                .anyRequest().authenticated()
-        ).formLogin(x -> x
-            .loginProcessingUrl("/api/auth/login")
-            .successHandler(loginSuccessHandler)
-            .failureHandler(loginFailureHandler)
-            .permitAll()
-        ).logout(x -> x
-            .logoutUrl("/api/auth/logout")
-            .logoutSuccessHandler(httpStatusReturningLogoutSuccessHandler)
-            .permitAll()
-        ).exceptionHandling(ex -> ex
-            .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.FORBIDDEN))
-            .accessDeniedHandler(customAccessDeniedHandler))
-        .sessionManagement(management -> management
-            .sessionConcurrency(c -> c
-                .maximumSessions(1)
-                .maxSessionsPreventsLogin(false)
-                .sessionRegistry(sessionRegistry()))
-        ).rememberMe(r -> r
-            .key("remember-me")
-            .rememberMeParameter("remember-me")
-            .tokenValiditySeconds(60 * 60 * 24 * 7)
-            .rememberMeCookieName("remember-me")
-        );
+                        "/index.html",
+                        "/assets/**",
+                        "favicon.ico",
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html");
+    }
 
-    return http.build();
-  }
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-  @Bean
-  public WebSecurityCustomizer webSecurityCustomizer() {
-    return web -> web.ignoring()
-        .requestMatchers(
-            "/index.html",
-            "/assets/**",
-            "favicon.ico",
-            "/v3/api-docs/**",
-            "/swagger-ui/**",
-            "/swagger-ui.html");
-  }
+    @Bean
+    public CommandLineRunner commandLineRunner(UserRepository userRepository,
+                                               PasswordEncoder passwordEncoder) {
+        return args -> {
+            if (userRepository.existsByRole(Role.ADMIN)) {
+                return;
+            }
 
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-  }
+            User user = User.builder()
+                    .username("admin")
+                    .password(passwordEncoder.encode("admin"))
+                    .email("admin@test.com")
+                    .profile(null)
+                    .build();
 
-  @Bean
-  public CommandLineRunner commandLineRunner(UserRepository userRepository,
-      PasswordEncoder passwordEncoder) {
-    return args -> {
-      if (userRepository.existsByRole(Role.ADMIN)) {
-        return;
-      }
+            user.updateRole(Role.ADMIN);
+            userRepository.save(user);
+        };
+    }
 
-      User user = User.builder()
-          .username("admin")
-          .password(passwordEncoder.encode("admin"))
-          .email("admin@test.com")
-          .profile(null)
-          .build();
+    @Bean
+    public RoleHierarchy roleHierarchy() {
+        RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
+        roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_CHANNEL_MANAGER > ROLE_USER");
+        return roleHierarchy;
+    }
 
-      user.updateRole(Role.ADMIN);
-      userRepository.save(user);
-    };
-  }
+    @Bean
+    static MethodSecurityExpressionHandler methodSecurityExpressionHandler(
+            RoleHierarchy roleHierarchy) {
+        DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
+        handler.setRoleHierarchy(roleHierarchy);
+        return handler;
+    }
 
-  @Bean
-  public RoleHierarchy roleHierarchy() {
-    RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
-    roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_CHANNEL_MANAGER >ROLE_USER");
-    return roleHierarchy;
-  }
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
 
-  @Bean
-  static MethodSecurityExpressionHandler methodSecurityExpressionHandler(
-      RoleHierarchy roleHierarchy) {
-    DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
-    handler.setRoleHierarchy(roleHierarchy);
-    return handler;
-  }
-
-  @Bean
-  public SessionRegistry sessionRegistry() {
-    return new SessionRegistryImpl();
-  }
-
-  @Bean
-  public HttpSessionEventPublisher httpSessionEventPublisher() {
-    return new HttpSessionEventPublisher();
-  }
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
+    }
 }
