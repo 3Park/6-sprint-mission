@@ -1,6 +1,8 @@
 package com.sprint.mission.discodeit.service.basic;
 
-import com.sprint.mission.discodeit.dto.data.DiscodeitUserDetails;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.dto.data.NotificationDto;
 import com.sprint.mission.discodeit.entity.Notification;
 import com.sprint.mission.discodeit.exception.ErrorCode;
@@ -12,11 +14,9 @@ import com.sprint.mission.discodeit.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,20 +25,23 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class BasicNotificationService implements NotificationService {
     private final NotificationRepository notificationRepository;
-    private final NotificationMapper notificationMapper;
     private final SecurityContextUtils securityContextUtils;
+    private final NotificationMapper notificationMapper;
+    private final CachedNotificationService cachedNotificationService;
+    private final ObjectMapper objectMapper;
 
     @Override
-    @Transactional(readOnly = true)
-    @Cacheable(
-            value = "notifications",
-            key = "@SecurityContext.getUserId()"
-    )
     public List<NotificationDto> findByReceiverId() {
-        return notificationRepository.findByReceiverId(securityContextUtils.getUserId()).orElse(List.of())
-                .stream()
-                .map(notificationMapper::toDto)
-                .toList();
+        String result = cachedNotificationService.findByReceiverId();
+        if (StringUtils.isEmpty(result))
+            return List.of();
+
+        try {
+            return objectMapper.readValue(result, new TypeReference<List<NotificationDto>>() {
+            });
+        } catch (JsonProcessingException e) {
+            throw new NotificationException(ErrorCode.INVALID_REQUEST);
+        }
     }
 
     @Transactional

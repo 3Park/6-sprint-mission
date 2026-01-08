@@ -17,7 +17,7 @@ public class SecurityContextUtils {
                 || authentication.getDetails() instanceof DiscodeitUserDetails)
             throw new NotificationException(ErrorCode.INVALID_USER_CREDENTIALS);
 
-        DiscodeitUserDetails userDetails = (DiscodeitUserDetails) authentication.getDetails();
+        DiscodeitUserDetails userDetails = (DiscodeitUserDetails) authentication.getPrincipal();
         return userDetails.getUserId();
     }
 }

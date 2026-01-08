@@ -26,6 +26,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -66,7 +67,7 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
 
     @Override
     @Retryable(
-            value = {S3Exception.class},
+            value = {SdkClientException.class},
             maxAttempts = 3,
             backoff = @Backoff(delay = 1000, maxDelay = 10000, multiplier = 2)
     )
@@ -84,18 +85,20 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
             log.info("S3에 파일 업로드 성공: {}", key);
 
             return binaryContentId;
-        } catch (S3Exception e) {
+        } catch (SdkClientException e) {
             log.error("S3에 파일 업로드 실패: {}", e.getMessage());
-            throw new RuntimeException("S3에 파일 업로드 실패: " + key, e);
+            throw e;
         }
     }
 
     @Recover
-    public void recover(S3Exception exception, UUID binaryContentId) {
+    public UUID recover(SdkClientException exception, UUID binaryContentId) {
         String title = "S3 파일 업로드 실패";
         String content = String.format("RequestedId : %s\nBinaryContentId : %s\nError: %s",
                 MDC.get(MDCLoggingInterceptor.REQUEST_ID), binaryContentId, exception.getMessage());
         eventPublisher.publishEvent(new UploadFailedEvent(title, content));
+
+        throw new RuntimeException("S3에 파일 업로드 실패: " + binaryContentId, exception);
     }
 
     @Override

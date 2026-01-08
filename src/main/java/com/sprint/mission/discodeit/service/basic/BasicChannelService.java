@@ -1,5 +1,8 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.discodeit.dto.data.ChannelDto;
 import com.sprint.mission.discodeit.dto.request.PrivateChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelCreateRequest;
@@ -26,6 +29,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @Service
@@ -38,6 +42,8 @@ public class BasicChannelService implements ChannelService {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
     private final ChannelMapper channelMapper;
+    private final CachedChannelService cachedChannelService;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     @Override
@@ -85,19 +91,18 @@ public class BasicChannelService implements ChannelService {
                 .orElseThrow(() -> ChannelNotFoundException.withId(channelId));
     }
 
-    @Transactional(readOnly = true)
     @Override
-    @Cacheable(value = "channels", key = "#userId")
     public List<ChannelDto> findAllByUserId(UUID userId) {
-        List<UUID> mySubscribedChannelIds = readStatusRepository.findAllByUserId(userId).stream()
-                .map(ReadStatus::getChannel)
-                .map(Channel::getId)
-                .toList();
+        String result = cachedChannelService.findAllByUserId(userId);
+        if (StringUtils.isEmpty(result))
+            return List.of();
 
-        return channelRepository.findAllByTypeOrIdIn(ChannelType.PUBLIC, mySubscribedChannelIds)
-                .stream()
-                .map(channelMapper::toDto)
-                .toList();
+        try {
+            return objectMapper.readValue(result, new TypeReference<List<ChannelDto>>() {
+            });
+        } catch (JsonProcessingException e) {
+            throw new ChannelNotFoundException();
+        }
     }
 
     @Transactional
