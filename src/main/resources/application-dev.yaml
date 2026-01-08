@@ -10,6 +10,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  sql:
+    init:
+      schema-locations: classpath:schema.sql
+      mode: never
 
 logging:
   level:

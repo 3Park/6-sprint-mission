@@ -9,6 +9,8 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.events.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.events.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.user.UserAlreadyExistsException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.jwt.JwtRegistry;
@@ -25,6 +27,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -40,9 +43,9 @@ public class BasicUserService implements UserService {
     private final UserStatusRepository userStatusRepository;
     private final UserMapper userMapper;
     private final BinaryContentRepository binaryContentRepository;
-    private final BinaryContentStorage binaryContentStorage;
     private final PasswordEncoder passwordEncoder;
     private final JwtRegistry jwtRegistry;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
     @Override
@@ -68,7 +71,7 @@ public class BasicUserService implements UserService {
                     BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
                             contentType);
                     binaryContentRepository.save(binaryContent);
-                    binaryContentStorage.put(binaryContent.getId(), bytes);
+                    applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
                     return binaryContent;
                 })
                 .orElse(null);
@@ -139,7 +142,7 @@ public class BasicUserService implements UserService {
                     BinaryContent binaryContent = new BinaryContent(fileName, (long) bytes.length,
                             contentType);
                     binaryContentRepository.save(binaryContent);
-                    binaryContentStorage.put(binaryContent.getId(), bytes);
+                    applicationEventPublisher.publishEvent(new BinaryContentCreatedEvent(binaryContent.getId(), bytes));
                     return binaryContent;
                 })
                 .orElse(null);
@@ -167,6 +170,7 @@ public class BasicUserService implements UserService {
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     public UserDto updateUserRole(UserRoleUpdateRequest request) {
         if (request == null) {
             throw new IllegalArgumentException();
@@ -176,11 +180,25 @@ public class BasicUserService implements UserService {
                 .orElseThrow(() -> UserNotFoundException.withId(request.userId()));
         log.info("사용자 role 변경. {} -> {}", user.getRole(), request.newRole());
 
+        Role oldRole = user.getRole();
+
         user.updateRole(request.newRole());
         userRepository.save(user);
 
         jwtRegistry.invalidateJwtInformationByUserId(user.getId().toString());
 
+        applicationEventPublisher.publishEvent(new RoleUpdatedEvent(user.getId(),
+                "권한이 변경되었습니다.",
+                String.format("%s -> %s", oldRole, request.newRole())));
+
         return userMapper.toDto(user);
+    }
+
+    @Override
+    public List<UserDto> findAllByRole(Role role) {
+        return userRepository.findAllByRole(role).orElse(null)
+                .stream()
+                .map(userMapper::toDto)
+                .toList();
     }
 }
