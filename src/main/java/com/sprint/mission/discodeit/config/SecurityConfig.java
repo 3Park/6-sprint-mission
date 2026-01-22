@@ -7,8 +7,6 @@ import com.sprint.mission.discodeit.jwt.JwtAuthenticationFilter;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,7 +15,6 @@ import org.springframework.security.access.expression.method.DefaultMethodSecuri
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -109,7 +106,7 @@ public class SecurityConfig {
     public CommandLineRunner commandLineRunner(UserRepository userRepository,
                                                PasswordEncoder passwordEncoder) {
         return args -> {
-            if (userRepository.existsByRole(Role.ADMIN)) {
+            if (userRepository.existsByRole(Role.ROLE_ADMIN)) {
                 return;
             }
 
@@ -120,7 +117,7 @@ public class SecurityConfig {
                     .profile(null)
                     .build();
 
-            user.updateRole(Role.ADMIN);
+            user.updateRole(Role.ROLE_ADMIN);
             userRepository.save(user);
         };
     }

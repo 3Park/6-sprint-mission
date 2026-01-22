@@ -107,7 +107,7 @@ class BasicMessageServiceTest {
                 Instant.now(),
                 content,
                 channelId,
-                new UserDto(authorId, "testUser", "test@example.com", null, true, Role.USER),
+                new UserDto(authorId, "testUser", "test@example.com", null, true, Role.ROLE_USER),
                 List.of(attachmentDto)
         );
     }
@@ -221,7 +221,7 @@ class BasicMessageServiceTest {
                 message1CreatedAt,
                 content + "1",
                 channelId,
-                new UserDto(authorId, "testUser", "test@example.com", null, true, Role.USER),
+                new UserDto(authorId, "testUser", "test@example.com", null, true, Role.ROLE_USER),
                 List.of(attachmentDto)
         );
 
@@ -231,7 +231,7 @@ class BasicMessageServiceTest {
                 message2CreatedAt,
                 content + "2",
                 channelId,
-                new UserDto(authorId, "testUser", "test@example.com", null, true, Role.USER),
+                new UserDto(authorId, "testUser", "test@example.com", null, true, Role.ROLE_USER),
                 List.of(attachmentDto)
         );
 
@@ -276,7 +276,7 @@ class BasicMessageServiceTest {
                 message3CreatedAt,
                 content + "3",
                 channelId,
-                new UserDto(authorId, "testUser", "test@example.com", null, true, Role.USER),
+                new UserDto(authorId, "testUser", "test@example.com", null, true, Role.ROLE_USER),
                 List.of(attachmentDto)
         );
         List<MessageDto> secondPageDtos = List.of(messageDto3);

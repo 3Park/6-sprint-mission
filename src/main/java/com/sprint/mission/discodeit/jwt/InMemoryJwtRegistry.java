@@ -32,7 +32,9 @@ public class InMemoryJwtRegistry implements JwtRegistry {
     @Override
     public void invalidateJwtInformationByUserId(String userId) {
 
-        if (origin.size() == 0 || origin.get(UUID.fromString(userId)).isEmpty())
+        if (origin.size() == 0
+                || origin.containsKey(UUID.fromString(userId)) == false
+                || origin.get(UUID.fromString(userId)).isEmpty())
             return;
 
         origin.remove(UUID.fromString(userId));
