@@ -1,18 +1,11 @@
 package com.sprint.mission.discodeit.dto.data;
 
-import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import java.time.Instant;
 import java.util.UUID;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
-public class UserStatusDto {
-
-  private UUID id;
-  private UUID userId;
-  private Instant lastActiveAt;
+public record UserStatusDto(
+    UUID id,
+    UUID userId,
+    Instant lastActiveAt) {
 
 }
