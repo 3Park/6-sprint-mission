@@ -67,12 +67,9 @@
     - Swagger UI 제공
 
 ### Validation & Monitoring
-# 0-spring-mission
 
 - **Spring Validation (Bean Validation)**
 - **Spring Actuator**
-스프린트 미션 모범 답안 리포지토리입니다.
-
 ### Code Generation & Productivity
 
 - **Lombok**
